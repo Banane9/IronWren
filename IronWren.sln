@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronWren", "IronWren\IronWren.csproj", "{1C2A5C32-A9EA-47DD-974D-C75BA5C06DC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronWren.ConsoleTesting", "IronWren.ConsoleTesting\IronWren.ConsoleTesting.csproj", "{877C8F48-ACB0-455C-AF70-5BD081B2CED8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C2A5C32-A9EA-47DD-974D-C75BA5C06DC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C2A5C32-A9EA-47DD-974D-C75BA5C06DC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C2A5C32-A9EA-47DD-974D-C75BA5C06DC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C2A5C32-A9EA-47DD-974D-C75BA5C06DC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{877C8F48-ACB0-455C-AF70-5BD081B2CED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{877C8F48-ACB0-455C-AF70-5BD081B2CED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{877C8F48-ACB0-455C-AF70-5BD081B2CED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{877C8F48-ACB0-455C-AF70-5BD081B2CED8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
