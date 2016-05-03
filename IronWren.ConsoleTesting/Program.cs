@@ -9,12 +9,12 @@ namespace IronWren.ConsoleTesting
         private static void Main(string[] args)
         {
             var config = new WrenConfig();
-            config.initialHeapSize = 200000000;
-            //config.write += (v, text) => Console.WriteLine(text);
+            config.Write += (v, text) => Console.Write(text);
 
-            var vm = new WrenVM(config);
-
-            var result = vm.Interpret("System.print(\"Hi!\")");
+            using (var vm = new WrenVM(config))
+            {
+                var result = vm.Interpret("System.print(\"Hi from Wren!\")");
+            }
 
             Console.ReadLine();
         }

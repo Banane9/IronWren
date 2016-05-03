@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace IronWren
 {
-    [StructLayout(LayoutKind.Sequential)]
     public class WrenConfig
     {
         internal Config config;
@@ -20,8 +19,8 @@ namespace IronWren
         /// </summary>
         public WrenReallocate Reallocate
         {
-            get { return config.reallocate; }
-            set { config.reallocate = value; }
+            get { return config.Reallocate; }
+            set { config.Reallocate = value; }
         }
 
         /// <summary>
@@ -42,8 +41,8 @@ namespace IronWren
         /// </summary>
         public WrenLoadModule LoadModule
         {
-            get { return config.loadModule; }
-            set { config.loadModule = value; }
+            get { return config.LoadModule; }
+            set { config.LoadModule = value; }
         }
 
         /// <summary>
@@ -57,7 +56,11 @@ namespace IronWren
         /// If the foreign function could not be found, this should return NULL and
         /// Wren will report it as runtime error.
         /// </summary>
-        public WrenBindForeignMethod bindForeignMethod;
+        public WrenBindForeignMethod BindForeignMethod
+        {
+            get { return config.BindForeignMethod; }
+            set { config.BindForeignMethod = value; }
+        }
 
         /// <summary>
         /// The callback Wren uses to find a foreign class and get its foreign methods.
@@ -67,7 +70,11 @@ namespace IronWren
         /// foreign functions uses to allocate and (optionally) finalize the bytes
         /// stored in the foreign object when an instance is created.
         /// </summary>
-        public WrenBindForeignClass bindForeignClass;
+        public WrenBindForeignClass BindForeignClass
+        {
+            get { return config.BindForeignClass; }
+            set { config.BindForeignClass = value; }
+        }
 
         /// <summary>
         /// The callback Wren uses to display text when `System.print()` or the other
@@ -75,10 +82,10 @@ namespace IronWren
         ///
         /// If this is `NULL`, Wren discards any printed text.
         /// </summary>
-        public WrenWrite write
+        public WrenWrite Write
         {
-            get { return config.write; }
-            set { config.write = value; }
+            get { return config.Write; }
+            set { config.Write = value; }
         }
 
         /// <summary>
@@ -88,7 +95,11 @@ namespace IronWren
         /// number, and an error message. If this is `NULL`, Wren doesn't report any
         /// errors.
         /// </summary>
-        public WrenError error;
+        public WrenError Error
+        {
+            get { return config.Error; }
+            set { config.Error = value; }
+        }
 
         /// <summary>
         /// The number of bytes Wren will allocate before triggering the first garbage
@@ -96,10 +107,10 @@ namespace IronWren
         ///
         /// If zero, defaults to 10MB.
         /// </summary>
-        public int initialHeapSize
+        public int InitialHeapSize
         {
-            get { return config.initialHeapSize; }
-            set { config.initialHeapSize = value; }
+            get { return config.InitialHeapSize; }
+            set { config.InitialHeapSize = value; }
         }
 
         /// <summary>
@@ -114,7 +125,11 @@ namespace IronWren
         ///
         /// If zero, defaults to 1MB.
         /// </summary>
-        public int minHeapSize;
+        public int MinHeapSize
+        {
+            get { return config.MinHeapSize; }
+            set { config.MinHeapSize = value; }
+        }
 
         /// <summary>
         /// Wren will grow (and shrink) the heap automatically as the number of bytes
@@ -132,37 +147,42 @@ namespace IronWren
         ///
         /// If zero, defaults to 50.
         /// </summary>
-        public int heapGrowthPercent;
+        public int HeapGrowthPercent
+        {
+            get { return config.HeapGrowthPercent; }
+            set { config.HeapGrowthPercent = value; }
+        }
 
+        [StructLayout(LayoutKind.Sequential)]
         internal struct Config
         {
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenReallocate reallocate;
+            public WrenReallocate Reallocate;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenLoadModule loadModule;
+            public WrenLoadModule LoadModule;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignMethod bindForeignMethod;
+            public WrenBindForeignMethod BindForeignMethod;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignClass bindForeignClass;
+            public WrenBindForeignClass BindForeignClass;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenWrite write;
+            public WrenWrite Write;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenError error;
+            public WrenError Error;
 
-            public int initialHeapSize;
+            public int InitialHeapSize;
 
-            public int minHeapSize;
+            public int MinHeapSize;
 
-            public int heapGrowthPercent;
+            public int HeapGrowthPercent;
         }
 
         /// <summary>
-        ///
+        /// Creates a new instance of the <see cref="WrenConfig"/> class with the default settings.
         /// </summary>
         public WrenConfig()
         {

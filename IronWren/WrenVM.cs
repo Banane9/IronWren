@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace IronWren
 {
-    public class WrenVM
+    public class WrenVM : IDisposable
     {
         private IntPtr vm;
 
@@ -35,5 +35,17 @@ namespace IronWren
 
         [DllImport("wren_static_d", EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
         private static extern WrenInterpretResult interpret(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string source);
+
+        [DllImport("wren_static_d", EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void freeVM(IntPtr vm);
+
+        /// <summary>
+        /// Frees the memory used by the VM. This makes it unusable.
+        /// </summary>
+        public void Dispose()
+        {
+            freeVM(vm);
+            vm = IntPtr.Zero;
+        }
     }
 }

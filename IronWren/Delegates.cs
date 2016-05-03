@@ -30,5 +30,5 @@ namespace IronWren
     public delegate void WrenReallocate(IntPtr memory, int size);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void WrenWrite(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)]string text);
+    public delegate void WrenWrite(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string text);
 }
