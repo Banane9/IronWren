@@ -189,7 +189,7 @@ namespace IronWren
             initConfiguration(out config);
         }
 
-        [DllImport("wren_static_d.dll", EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("wren", EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
         private static extern void initConfiguration(out Config config);
     }
 }

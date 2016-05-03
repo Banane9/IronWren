@@ -27,16 +27,16 @@ namespace IronWren
             return interpret(vm, source);
         }
 
-        [DllImport("wren_static_d", EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("wren", EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr newVM(ref WrenConfig.Config config);
 
-        [DllImport("wren_static_d", EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("wren", EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr newVM(IntPtr config);
 
-        [DllImport("wren_static_d", EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("wren", EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
         private static extern WrenInterpretResult interpret(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string source);
 
-        [DllImport("wren_static_d", EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("wren", EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern void freeVM(IntPtr vm);
 
         /// <summary>

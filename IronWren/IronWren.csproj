@@ -49,7 +49,10 @@
     <Compile Include="WrenVM.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="wren_static_d.dll">
+    <Content Include="wren.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wren.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
