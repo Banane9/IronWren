@@ -14,6 +14,8 @@ namespace IronWren
         private const string wren = "Wren/wren";
 #endif
 
+        private static Dictionary<IntPtr, WrenVM> vms = new Dictionary<IntPtr, WrenVM>();
+
         /// <summary>
         /// The name of the module in which calls to <see cref="WrenVM.Interpret(string)"/> are evaluated.
         /// </summary>
@@ -30,6 +32,8 @@ namespace IronWren
         {
             vm = newVM(ref config.config);
 
+            vms.Add(vm, this);
+
             // keep the config/delegates inside it alive
             this.config = config;
         }
@@ -40,6 +44,24 @@ namespace IronWren
         public WrenVM()
         {
             vm = newVM(IntPtr.Zero);
+
+            vms.Add(vm, this);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="WrenVM"/> associated with the given IntPtr.
+        /// </summary>
+        /// <param name="ptr">The IntPtr to the VM.</param>
+        /// <returns>The <see cref="WrenVM"/> object.</returns>
+        public static WrenVM GetVM(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+                throw new ArgumentException("Pointer can't be a null pointer!", nameof(ptr));
+
+            if (!vms.ContainsKey(ptr))
+                throw new ArgumentException("No VM with that pointer found!", nameof(ptr));
+
+            return vms[ptr];
         }
 
         /// <summary>
@@ -142,6 +164,29 @@ namespace IronWren
         {
             setSlotString(vm, slot, text);
         }
+
+        /// <summary>
+        /// Creates a new instance of the foreign class stored in [classSlot] with [size]
+        /// bytes of raw storage and places the resulting object in [slot].
+        ///
+        /// This does not invoke the foreign class's constructor on the new instance. If
+        /// you need that to happen, call the constructor from Wren, which will then
+        /// call the allocator foreign method. In there, call this to create the object
+        /// and then the constructor will be invoked when the allocator returns.
+        ///
+        /// Returns a pointer to the foreign object's data.
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="classSlot"></param>
+        /// <param name="size">The size in bytes.</param>
+        /// <returns></returns>
+        public IntPtr SetSlotNewForeign(int slot, int classSlot, uint size)
+        {
+            return setSlotNewForeign(vm, slot, classSlot, size);
+        }
+
+        [DllImport(wren, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr setSlotNewForeign(IntPtr vm, int slot, int classSlot, uint size);
 
         [DllImport(wren, EntryPoint = "wrenSetSlotString", CallingConvention = CallingConvention.Cdecl)]
         private static extern void setSlotString(IntPtr vm, int slot, [MarshalAs(UnmanagedType.LPStr), In]string text);

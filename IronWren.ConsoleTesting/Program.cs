@@ -12,6 +12,8 @@ namespace IronWren.ConsoleTesting
             config.Write += (v, text) => Console.Write(text);
             config.Error += (type, module, line, message) => Console.WriteLine("Error [" + type + "] in module [" + module + "] at line " + line + ":" + Environment.NewLine + message);
 
+            config.BindForeignClass += (vm, module, className) => new WrenForeignClassMethods { allocate = v => WrenVM.GetVM(v).SetSlotNewForeign(0, 0, 1) };
+
             using (var vm = new WrenVM(config))
             {
                 var result = vm.Interpret("System.print(\"Hi from Wren!\")");
@@ -28,6 +30,8 @@ namespace IronWren.ConsoleTesting
                 vm.GetVariable(WrenVM.InterpetModule, "helloTo", 0);
                 vm.SetSlotString(1, "foreign method");
                 result = vm.Call(someFnHandle);
+
+                result = vm.Interpret("foreign class Test { }");
             }
 
             Console.ReadLine();

@@ -74,11 +74,7 @@ namespace IronWren
         /// foreign functions uses to allocate and (optionally) finalize the bytes
         /// stored in the foreign object when an instance is created.
         /// </summary>
-        public WrenBindForeignClass BindForeignClass
-        {
-            get { return config.BindForeignClass; }
-            set { config.BindForeignClass = value; }
-        }
+        public WrenBindForeignClass BindForeignClass { get; set; }
 
         /// <summary>
         /// The callback Wren uses to display text when `System.print()` or the other
@@ -170,7 +166,7 @@ namespace IronWren
             public WrenBindForeignMethod BindForeignMethod;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignClass BindForeignClass;
+            public WrenBindForeignClassInternal BindForeignClass;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenWrite Write;
@@ -191,6 +187,24 @@ namespace IronWren
         public WrenConfig()
         {
             initConfiguration(out config);
+
+            config.BindForeignClass = bindForeignClass;
+        }
+
+        private IntPtr bindForeignClass(IntPtr vm, IntPtr modulePtr, IntPtr classNamePtr)
+        {
+            if (BindForeignClass == null)
+                return IntPtr.Zero;
+
+            var module = Marshal.PtrToStringAnsi(modulePtr);
+            var className = Marshal.PtrToStringAnsi(classNamePtr);
+
+            var result = BindForeignClass(WrenVM.GetVM(vm), module, className);
+
+            var resultPtr = Marshal.AllocHGlobal(Marshal.SizeOf(result));
+            Marshal.StructureToPtr(result, resultPtr, false);
+
+            return resultPtr;
         }
 
         [DllImport(wren, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
