@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-#if true
-#endif
-
 namespace IronWren
 {
     public class WrenConfig
     {
+        // Also stops CodeMaid from reorganizing the file
+#if DEBUG
+        private const string wren = "Wren/wren-debug";
+#else
+        private const string wren = "Wren/wren";
+#endif
+
         internal Config config;
 
         /// <summary>
@@ -189,7 +193,7 @@ namespace IronWren
             initConfiguration(out config);
         }
 
-        [DllImport("wren", EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void initConfiguration(out Config config);
+        [DllImport(wren, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void initConfiguration([Out]out Config config);
     }
 }

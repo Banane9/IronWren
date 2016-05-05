@@ -7,11 +7,11 @@ namespace IronWren
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.FunctionPtr)]
-    public delegate WrenForeignClassMethods WrenBindForeignClass(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className);
+    public delegate WrenForeignClassMethods WrenBindForeignClass(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.FunctionPtr)]
-    public delegate WrenForeignMethod WrenBindForeignMethod(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)]string signature);
+    public delegate WrenForeignMethod WrenBindForeignMethod(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)]string signature);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void WrenError(WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
@@ -20,11 +20,11 @@ namespace IronWren
     public delegate void WrenFinalizer(IntPtr data);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void WrenForeignMethod(WrenVM vm);
+    public delegate void WrenForeignMethod(IntPtr vm);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.LPStr)]
-    public delegate string WrenLoadModule(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)]string name);
+    public delegate string WrenLoadModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void WrenReallocate(IntPtr memory, int size);
