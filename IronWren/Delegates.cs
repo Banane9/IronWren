@@ -22,7 +22,8 @@ namespace IronWren
     public delegate WrenForeignClassMethods WrenBindForeignClass(WrenVM vm, string module, string className);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate IntPtr WrenBindForeignClassInternal(IntPtr vm, IntPtr module, IntPtr className);
+    internal delegate WrenForeignClassMethodsInternal WrenBindForeignClassInternal(
+        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className);
 
     #endregion WrenBindForeignClass
 

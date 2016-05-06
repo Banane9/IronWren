@@ -107,7 +107,7 @@ namespace IronWren
         ///
         /// If zero, defaults to 10MB.
         /// </summary>
-        public int InitialHeapSize
+        public uint InitialHeapSize
         {
             get { return config.InitialHeapSize; }
             set { config.InitialHeapSize = value; }
@@ -125,7 +125,7 @@ namespace IronWren
         ///
         /// If zero, defaults to 1MB.
         /// </summary>
-        public int MinHeapSize
+        public uint MinHeapSize
         {
             get { return config.MinHeapSize; }
             set { config.MinHeapSize = value; }
@@ -174,9 +174,9 @@ namespace IronWren
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenError Error;
 
-            public int InitialHeapSize;
+            public uint InitialHeapSize;
 
-            public int MinHeapSize;
+            public uint MinHeapSize;
 
             public int HeapGrowthPercent;
         }
@@ -191,20 +191,14 @@ namespace IronWren
             config.BindForeignClass = bindForeignClass;
         }
 
-        private IntPtr bindForeignClass(IntPtr vm, IntPtr modulePtr, IntPtr classNamePtr)
+        private WrenForeignClassMethodsInternal bindForeignClass(IntPtr vm, string module, string className)
         {
             if (BindForeignClass == null)
-                return IntPtr.Zero;
-
-            var module = Marshal.PtrToStringAnsi(modulePtr);
-            var className = Marshal.PtrToStringAnsi(classNamePtr);
+                return new WrenForeignClassMethodsInternal();
 
             var result = BindForeignClass(WrenVM.GetVM(vm), module, className);
 
-            var resultPtr = Marshal.AllocHGlobal(Marshal.SizeOf(result));
-            Marshal.StructureToPtr(result, resultPtr, false);
-
-            return resultPtr;
+            return new WrenForeignClassMethodsInternal(result);
         }
 
         [DllImport(wren, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
