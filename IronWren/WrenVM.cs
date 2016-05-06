@@ -17,7 +17,7 @@ namespace IronWren
         private static Dictionary<IntPtr, WrenVM> vms = new Dictionary<IntPtr, WrenVM>();
 
         /// <summary>
-        /// The name of the module in which calls to <see cref="WrenVM.Interpret(string)"/> are evaluated.
+        /// The name of the module in which calls to <see cref="Interpret(string)"/> are evaluated.
         /// </summary>
         public const string InterpetModule = "main";
 
@@ -31,8 +31,9 @@ namespace IronWren
         public WrenVM(WrenConfig config)
         {
             vm = newVM(ref config.config);
-
             vms.Add(vm, this);
+
+            config.Used = true;
 
             // keep the config/delegates inside it alive
             this.config = config;
@@ -66,12 +67,12 @@ namespace IronWren
 
         /// <summary>
         /// Calls the given method, using the receiver and arguments previously set up on the stack.
-        ///
+        /// <para/>
         /// The method must have been created by a call to <see cref="MakeCallHandle(string)"/>.
         /// The arguments to the method must be already on the stack. The receiver should be
         /// in slot 0 with the remaining arguments following it, in order. It is an
         /// error if the number of arguments provided does not match the method's signature.
-        ///
+        /// <para/>
         /// After this returns, you can access the return value from slot 0 on the stack.
         /// </summary>
         /// <param name="callHandle"></param>
@@ -122,10 +123,10 @@ namespace IronWren
         /// <summary>
         /// Creates a handle that can be used to invoke a method with the given signature on
         /// a receiver and arguments that are set up on the stack.
-        ///
+        /// <para/>
         /// This handle can be used repeatedly to directly invoke that method from
         /// code using <see cref="Call(IntPtr)"/>.
-        ///
+        /// <para/>
         /// When you are done with this handle, it must be released using <see cref="ReleaseValue(IntPtr)"/>.
         /// </summary>
         /// <param name="signature">The signature of the method. It has to include the braces and an underscore for each argument.
@@ -139,9 +140,9 @@ namespace IronWren
         /// <summary>
         /// Ensures that the foreign method stack has at least the given number of slots available for use,
         /// growing the stack if needed.
-        ///
+        /// <para/>
         /// Does not shrink the stack if it has more than enough slots.
-        ///
+        /// <para/>
         /// It is an error to call this from a finalizer.
         /// </summary>
         /// <param name="count">The minimum number of slots.</param>
@@ -152,11 +153,11 @@ namespace IronWren
 
         /// <summary>
         /// Reads a string from the given slot.
-        ///
+        /// <para/>
         /// The memory for the returned string is owned by Wren. You can inspect it
         /// while in your foreign method, but cannot keep a pointer to it after the
         /// function returns, since the garbage collector may reclaim it.
-        ///
+        /// <para/>
         /// It is an error to call this if the slot does not contain a string.
         /// </summary>
         /// <param name="slot">The slot to read the string from.</param>
@@ -169,7 +170,7 @@ namespace IronWren
 
         /// <summary>
         /// Stores the given string in the given slot.
-        ///
+        /// <para/>
         /// The text is copied to a new string within Wren's heap, so you can free
         /// memory used by it after this is called. The length is calculated using
         /// strlen(). If the string may contain any null bytes in the middle, then you
@@ -185,12 +186,12 @@ namespace IronWren
         /// <summary>
         /// Creates a new instance of the foreign class stored in [classSlot] with [size]
         /// bytes of raw storage and places the resulting object in [slot].
-        ///
+        /// <para/>
         /// This does not invoke the foreign class's constructor on the new instance. If
         /// you need that to happen, call the constructor from Wren, which will then
         /// call the allocator foreign method. In there, call this to create the object
         /// and then the constructor will be invoked when the allocator returns.
-        ///
+        /// <para/>
         /// Returns a pointer to the foreign object's data.
         /// </summary>
         /// <param name="slot"></param>

@@ -28,7 +28,7 @@ namespace IronWren
     {
         /// <summary>
         /// The callback invoked when the foreign object is created.
-        ///
+        /// <para/>
         /// This must be provided. Inside the body of this, it must call
         /// <see cref="WrenVM.SetSlotNewForeign(int, int, uint)"/> exactly once.
         /// </summary>
@@ -36,7 +36,7 @@ namespace IronWren
 
         /// <summary>
         /// The callback invoked when the garbage collector is about to collect a foreign object's memory.
-        ///
+        /// <para/>
         /// This may be null if the foreign class does not need to finalize.
         /// </summary>
         public WrenFinalizer Finalize;

@@ -15,10 +15,12 @@ namespace IronWren.ConsoleTesting
         private static void Main(string[] args)
         {
             var config = new WrenConfig();
-            config.Write += (v, text) => Console.Write(text);
+            config.Write += (vm, text) => Console.Write(text);
             config.Error += (type, module, line, message) => Console.WriteLine("Error [" + type + "] in module [" + module + "] at line " + line + ":" + Environment.NewLine + message);
 
-            config.BindForeignMethod += (v, module, className, isStatic, signature) => { Console.WriteLine("BindForeignMethod called: It's called " + signature + " and is it static? " + isStatic); return sayHi; };
+            config.LoadModule += (vm, module) => $"System.print(\"Module [{module}] loaded!\")";
+
+            config.BindForeignMethod += (vm, module, className, isStatic, signature) => { Console.WriteLine("BindForeignMethod called: It's called " + signature + " and is it static? " + isStatic); return sayHi; };
             config.BindForeignClass += (vm, module, className) => new WrenForeignClassMethods { Allocate = alloc };
 
             using (var vm = new WrenVM(config))
@@ -43,7 +45,9 @@ namespace IronWren.ConsoleTesting
                     "foreign sayHi(to)\n" +
                     "}\n" +
                     "var test = Test.new()\n" +
-                    "test.sayHi(\"wren\")");
+                    "test.sayHi(\"wren\")\n" +
+                    "\n" +
+                    "import \"TestModule\"\n");
             }
 
             Console.ReadLine();
