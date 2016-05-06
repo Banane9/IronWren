@@ -37,7 +37,7 @@ namespace IronWren
         /// The callback Wren uses to load a module.
         /// <para/>
         /// Since Wren does not talk directly to the file system, it relies on the
-        /// embedder to phyisically locate and read the source code for a module. The
+        /// embedder to physically locate and read the source code for a module. The
         /// first time an import appears, Wren will call this and pass in the name of
         /// the module being imported. The VM should return the soure code for that and
         /// Wren will take ownership over it.
