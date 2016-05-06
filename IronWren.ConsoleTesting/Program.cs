@@ -6,10 +6,10 @@ namespace IronWren.ConsoleTesting
 {
     internal class Program
     {
-        private static void alloc(IntPtr vm)
+        private static void alloc(WrenVM vm)
         {
             Console.WriteLine("Allocator called!");
-            WrenVM.GetVM(vm).SetSlotNewForeign(0, 0, 1);
+            vm.SetSlotNewForeign(0, 0, 1);
         }
 
         private static void Main(string[] args)
@@ -18,7 +18,7 @@ namespace IronWren.ConsoleTesting
             config.Write += (v, text) => Console.Write(text);
             config.Error += (type, module, line, message) => Console.WriteLine("Error [" + type + "] in module [" + module + "] at line " + line + ":" + Environment.NewLine + message);
 
-            config.BindForeignMethod += (v, module, className, isStatic, signature) => { Console.WriteLine("BindForeignMethod called"); return default(WrenForeignMethod); };
+            config.BindForeignMethod += (v, module, className, isStatic, signature) => { Console.WriteLine("BindForeignMethod called: It's called " + signature + " and is it static? " + isStatic); return sayHi; };
             config.BindForeignClass += (vm, module, className) => new WrenForeignClassMethods { Allocate = alloc };
 
             using (var vm = new WrenVM(config))
@@ -39,12 +39,20 @@ namespace IronWren.ConsoleTesting
                 result = vm.Call(someFnHandle);
 
                 result = vm.Interpret("foreign class Test {\n" +
-                    "construct new() { }" +
+                    "construct new() { }\n" +
+                    "foreign sayHi(to)\n" +
                     "}\n" +
-                    "var test = Test.new()");
+                    "var test = Test.new()\n" +
+                    "test.sayHi(\"wren\")");
             }
 
             Console.ReadLine();
+        }
+
+        private static void sayHi(WrenVM vm)
+        {
+            var to = vm.GetSlotString(1);
+            Console.WriteLine("Foreign method says hi to " + to + "!");
         }
     }
 }

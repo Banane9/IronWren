@@ -3,7 +3,28 @@ using System.Runtime.InteropServices;
 
 namespace IronWren
 {
-    public struct WrenForeignClassMethods
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WrenForeignClassMethodsInternal
+    {
+        public IntPtr Allocate;
+
+        public IntPtr Finalize;
+
+        public WrenForeignClassMethodsInternal(WrenForeignClassMethods methods)
+        {
+            if (methods.Allocate != null)
+                Allocate = Marshal.GetFunctionPointerForDelegate((WrenForeignMethodInternal)methods.AllocateInternal);
+            else
+                Allocate = IntPtr.Zero;
+
+            if (methods.Finalize != null)
+                Finalize = Marshal.GetFunctionPointerForDelegate(methods.Finalize);
+            else
+                Finalize = IntPtr.Zero;
+        }
+    }
+
+    public class WrenForeignClassMethods
     {
         /// <summary>
         /// The callback invoked when the foreign object is created.
@@ -19,26 +40,13 @@ namespace IronWren
         /// This may be null if the foreign class does not need to finalize.
         /// </summary>
         public WrenFinalizer Finalize;
-    }
 
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct WrenForeignClassMethodsInternal
-    {
-        public IntPtr Allocate;
-
-        public IntPtr Finalize;
-
-        public WrenForeignClassMethodsInternal(WrenForeignClassMethods methods)
+        internal void AllocateInternal(IntPtr vm)
         {
-            if (methods.Allocate != null)
-                Allocate = Marshal.GetFunctionPointerForDelegate(methods.Allocate);
-            else
-                Allocate = IntPtr.Zero;
+            if (Allocate == null)
+                return;
 
-            if (methods.Finalize != null)
-                Finalize = Marshal.GetFunctionPointerForDelegate(methods.Finalize);
-            else
-                Finalize = IntPtr.Zero;
+            Allocate(WrenVM.GetVM(vm));
         }
     }
 }

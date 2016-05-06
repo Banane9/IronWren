@@ -53,7 +53,7 @@ namespace IronWren
         /// </summary>
         /// <param name="ptr">The IntPtr to the VM.</param>
         /// <returns>The <see cref="WrenVM"/> object.</returns>
-        public static WrenVM GetVM(IntPtr ptr)
+        internal static WrenVM GetVM(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
                 throw new ArgumentException("Pointer can't be a null pointer!", nameof(ptr));
@@ -151,6 +151,23 @@ namespace IronWren
         }
 
         /// <summary>
+        /// Reads a string from the given slot.
+        ///
+        /// The memory for the returned string is owned by Wren. You can inspect it
+        /// while in your foreign method, but cannot keep a pointer to it after the
+        /// function returns, since the garbage collector may reclaim it.
+        ///
+        /// It is an error to call this if the slot does not contain a string.
+        /// </summary>
+        /// <param name="slot">The slot to read the string from.</param>
+        /// <returns>The string contained in the slot.</returns>
+        public string GetSlotString(int slot)
+        {
+            var contentPtr = getSlotString(vm, slot);
+            return Marshal.PtrToStringAnsi(contentPtr);
+        }
+
+        /// <summary>
         /// Stores the given string in the given slot.
         ///
         /// The text is copied to a new string within Wren's heap, so you can free
@@ -187,6 +204,9 @@ namespace IronWren
 
         [DllImport(wren, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr setSlotNewForeign(IntPtr vm, int slot, int classSlot, uint size);
+
+        [DllImport(wren, EntryPoint = "wrenGetSlotString", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr getSlotString(IntPtr vm, int slot);
 
         [DllImport(wren, EntryPoint = "wrenSetSlotString", CallingConvention = CallingConvention.Cdecl)]
         private static extern void setSlotString(IntPtr vm, int slot, [MarshalAs(UnmanagedType.LPStr), In]string text);

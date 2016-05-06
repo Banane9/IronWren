@@ -60,11 +60,7 @@ namespace IronWren
         /// If the foreign function could not be found, this should return NULL and
         /// Wren will report it as runtime error.
         /// </summary>
-        public WrenBindForeignMethod BindForeignMethod
-        {
-            get { return config.BindForeignMethod; }
-            set { config.BindForeignMethod = value; }
-        }
+        public WrenBindForeignMethod BindForeignMethod { get; set; }
 
         /// <summary>
         /// The callback Wren uses to find a foreign class and get its foreign methods.
@@ -163,7 +159,7 @@ namespace IronWren
             public WrenLoadModule LoadModule;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignMethod BindForeignMethod;
+            public WrenBindForeignMethodInternal BindForeignMethod;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenBindForeignClassInternal BindForeignClass;
@@ -188,8 +184,30 @@ namespace IronWren
         {
             initConfiguration(out config);
 
+            config.BindForeignMethod = bindForeignMethod;
             config.BindForeignClass = bindForeignClass;
         }
+
+        private static List<WrenForeignMethodInternal> wrappedResults = new List<WrenForeignMethodInternal>();
+
+        private WrenForeignMethodInternal bindForeignMethod(IntPtr vm, string module, string className, bool isStatic, string signature)
+        {
+            if (BindForeignMethod == null)
+                return null;
+
+            var result = BindForeignMethod(WrenVM.GetVM(vm), module, className, isStatic, signature);
+
+            if (result == null)
+                return null;
+
+            WrenForeignMethodInternal wrappedResult = vmPtr => result(WrenVM.GetVM(vmPtr));
+            //wrappedResults.Add(wrappedResult);
+
+            return wrappedResult;
+        }
+
+        private static Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal> classMethods =
+            new Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal>();
 
         private WrenForeignClassMethodsInternal bindForeignClass(IntPtr vm, string module, string className)
         {
@@ -198,7 +216,10 @@ namespace IronWren
 
             var result = BindForeignClass(WrenVM.GetVM(vm), module, className);
 
-            return new WrenForeignClassMethodsInternal(result);
+            var methods = new WrenForeignClassMethodsInternal(result);
+            //classMethods.Add(result, methods);
+
+            return methods;
         }
 
         [DllImport(wren, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
