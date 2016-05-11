@@ -46,8 +46,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WrenErrorType.cs" />
     <Compile Include="WrenForeignClassMethods.cs" />
+    <Compile Include="WrenFunctionHandle.cs" />
     <Compile Include="WrenInterpretResult.cs" />
     <Compile Include="WrenType.cs" />
+    <Compile Include="WrenValueHandle.cs" />
     <Compile Include="WrenVM.cs" />
   </ItemGroup>
   <ItemGroup />

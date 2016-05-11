@@ -101,18 +101,18 @@ namespace IronWren
         /// a receiver and arguments that are set up on the stack.
         /// <para/>
         /// This handle can be used repeatedly to directly invoke that method from
-        /// code using <see cref="Call(IntPtr)"/>.
+        /// code using <see cref="Call(WrenFunctionHandle)"/>.
         /// <para/>
-        /// When you are done with this handle, it must be released using <see cref="ReleaseValue(IntPtr)"/>.
+        /// When you are done with this handle, it must be released using <see cref="ReleaseValue(WrenFunctionHandle)"/>.
         /// </summary>
         /// <param name="signature">
         /// The signature of the method. It has to include the braces and an underscore for each argument.
         /// For example a function with one argument would look like: oneArgument(_).
         /// </param>
         /// <returns>A handle to the function.</returns>
-        public IntPtr MakeCallHandle(string signature)
+        public WrenFunctionHandle MakeCallHandle(string signature)
         {
-            return makeCallHandle(vm, signature);
+            return (WrenFunctionHandle)makeCallHandle(vm, signature);
         }
 
         /// <summary>
@@ -125,11 +125,21 @@ namespace IronWren
         /// <para/>
         /// After this returns, you can access the return value from slot 0 on the stack.
         /// </summary>
-        /// <param name="callHandle">The call handle of the function.</param>
+        /// <param name="handle">The call handle of the function.</param>
         /// <returns>The status of the interpretion.</returns>
-        public WrenInterpretResult Call(IntPtr callHandle)
+        public WrenInterpretResult Call(WrenFunctionHandle handle)
         {
-            return call(vm, callHandle);
+            return call(vm, handle);
+        }
+
+        /// <summary>
+        /// Releases the reference stored in the given function handle.
+        /// After calling this, the function handle can no longer be used.
+        /// </summary>
+        /// <param name="handle">The function handle to release.</param>
+        public void ReleaseValue(WrenFunctionHandle handle)
+        {
+            releaseValue(vm, handle);
         }
 
         #endregion Function Interactions
@@ -199,23 +209,23 @@ namespace IronWren
         /// Creates a handle for the value stored in the given slot.
         /// <para/>
         /// This will prevent the object that is referred to from being garbage collected
-        /// until the handle is released by calling <see cref="WrenVM.ReleaseValue(IntPtr)"/>.
+        /// until the handle is released by calling <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/>.
         /// </summary>
         /// <param name="slot">The slot containing the value to create a handle for.</param>
         /// <returns>A handle to the value in the slot.</returns>
-        public IntPtr GetSlotValue(int slot)
+        public WrenValueHandle GetSlotValue(int slot)
         {
-            return getSlotValue(vm, slot);
+            return (WrenValueHandle)getSlotValue(vm, slot);
         }
 
         /// <summary>
         /// Stores the value captured by the given value handle in the given slot.
         /// <para/>
-        /// This does not release the handle for the value. You must call <see cref="WrenVM.ReleaseValue(IntPtr)"/> to do so.
+        /// This does not release the handle for the value. You must call <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/> to do so.
         /// </summary>
         /// <param name="slot">The slot to write the value captured by the value handle to.</param>
         /// <param name="value">The value handle.</param>
-        public void SetSlotValue(int slot, IntPtr value)
+        public void SetSlotValue(int slot, WrenValueHandle value)
         {
             setSlotValue(vm, slot, value);
         }
@@ -225,7 +235,7 @@ namespace IronWren
         /// After calling this, the value handle can no longer be used.
         /// </summary>
         /// <param name="value">The value handle to release.</param>
-        public void ReleaseValue(IntPtr value)
+        public void ReleaseValue(WrenValueHandle value)
         {
             releaseValue(vm, value);
         }
