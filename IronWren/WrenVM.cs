@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace IronWren
 {
+    /// <summary>
+    /// Represents an instance of the VM running Wren.
+    /// </summary>
     public class WrenVM : IDisposable
     {
         // Also stops CodeMaid from reorganizing the file
