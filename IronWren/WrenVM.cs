@@ -24,8 +24,12 @@ namespace IronWren
         /// </summary>
         public const string InterpetModule = "main";
 
-        private WrenConfig config;
         private IntPtr vm;
+
+        /// <summary>
+        /// Gets the config used for this VM.
+        /// </summary>
+        public WrenConfig Config { get; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenVM"/> class with the given config for the VM.
@@ -39,18 +43,15 @@ namespace IronWren
             config.Used = true;
 
             // keep the config/delegates inside it alive
-            this.config = config;
+            Config = config;
         }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenVM"/> class with the default config for the VM.
         /// </summary>
         public WrenVM()
-        {
-            vm = newVM(IntPtr.Zero);
-
-            vms.Add(vm, this);
-        }
+            : this(new WrenConfig())
+        { }
 
         /// <summary>
         /// Gets the <see cref="WrenVM"/> associated with the given IntPtr.
@@ -552,9 +553,6 @@ namespace IronWren
 
         [DllImport(wren, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr newVM([In]ref WrenConfig.Config config);
-
-        [DllImport(wren, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr newVM(IntPtr config);
 
         [DllImport(wren, EntryPoint = "wrenCollectGarbage", CallingConvention = CallingConvention.Cdecl)]
         private static extern void collectGarbage(IntPtr vm);

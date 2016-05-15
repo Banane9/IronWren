@@ -50,6 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoMapper\AutoMapper.cs" />
+    <Compile Include="AutoMapper\LoadedModuleModifiedException.cs" />
+    <Compile Include="AutoMapper\Module.cs" />
     <Compile Include="Delegates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WrenConfig.cs" />
