@@ -9,9 +9,9 @@ namespace IronWren
     {
         // Also stops CodeMaid from reorganizing the file
 #if DEBUG
-        private const string wren = "Wren/wren-debug";
+        private const string wren = "Native/wren-debug";
 #else
-        private const string wren = "Wren/wren";
+        private const string wren = "Native/wren";
 #endif
 
         private static Dictionary<IntPtr, WrenVM> vms = new Dictionary<IntPtr, WrenVM>();
