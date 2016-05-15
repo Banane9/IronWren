@@ -25,8 +25,6 @@ namespace IronWren
 
         /// <summary>
         /// The callback Wren will use to allocate, reallocate, and deallocate memory.
-        /// <para/>
-        /// If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
         /// </summary>
         internal WrenReallocate Reallocate
         {
@@ -48,6 +46,8 @@ namespace IronWren
         /// <para/>
         /// If a module with the given name could not be found by the embedder, it
         /// should return NULL and Wren will report that as a runtime error.
+        /// <para/>
+        /// Only one of the multiple possible LoadModule implementations must actually return the source for the module.
         /// </summary>
         public WrenLoadModule LoadModule { get; set; }
 
@@ -61,6 +61,8 @@ namespace IronWren
         /// <para/>
         /// If the foreign function could not be found, this should return NULL and
         /// Wren will report it as runtime error.
+        /// <para/>
+        /// Only one of the multiple possible BindForeignMethod implementations must actually return a method.
         /// </summary>
         public WrenBindForeignMethod BindForeignMethod { get; set; }
 
@@ -71,6 +73,8 @@ namespace IronWren
         /// module and name when the class body is executed. It should return the
         /// foreign functions uses to allocate and (optionally) finalize the bytes
         /// stored in the foreign object when an instance is created.
+        /// <para/>
+        /// Only one of the multiple possible BindForeignClass implementations must actually return the <see cref="WrenForeignClassMethods"/>.
         /// </summary>
         public WrenBindForeignClass BindForeignClass { get; set; }
 
@@ -214,12 +218,16 @@ namespace IronWren
             if (LoadModule == null)
                 return IntPtr.Zero;
 
-            var result = LoadModule(WrenVM.GetVM(vm), name);
+            // Only one of the multiple possible LoadModule implementations must actually return the source for the module
+            var result = LoadModule.GetInvocationList().Cast<WrenLoadModule>()
+                .Select(loadModule => loadModule(WrenVM.GetVM(vm), name))
+                .Single(res => res != null);
 
             if (result == null)
                 return IntPtr.Zero;
 
-            var resultPtr = Marshal.StringToCoTaskMemAnsi(result); // Possibly have to free this again
+            // Possibly have to free this again
+            var resultPtr = Marshal.StringToCoTaskMemAnsi(result);
 
             return resultPtr;
         }
@@ -231,12 +239,16 @@ namespace IronWren
             if (BindForeignMethod == null)
                 return null;
 
-            var result = BindForeignMethod(WrenVM.GetVM(vm), module, className, isStatic, signature);
+            // Only one of the multiple possible BindForeignMethod implementations must actually return a method.
+            var result = BindForeignMethod.GetInvocationList().Cast<WrenBindForeignMethod>()
+                .Select(bindForeignMethod => bindForeignMethod(WrenVM.GetVM(vm), module, className, isStatic, signature))
+                .Single(res => res != null);
 
             if (result == null)
                 return null;
 
-            WrenForeignMethodInternal wrappedResult = vmPtr => result(WrenVM.GetVM(vmPtr)); // Possibly have to save the delegate so it isn't GCed
+            // Possibly have to save the delegate so it isn't GCed
+            WrenForeignMethodInternal wrappedResult = vmPtr => result(WrenVM.GetVM(vmPtr));
             //wrappedResults.Add(wrappedResult);
 
             return wrappedResult;
@@ -250,9 +262,13 @@ namespace IronWren
             if (BindForeignClass == null)
                 return new WrenForeignClassMethodsInternal();
 
-            var result = BindForeignClass(WrenVM.GetVM(vm), module, className);
+            // Only one of the multiple possible BindForeignClass implementations must actually return the ForeignClassMethods
+            var result = BindForeignClass.GetInvocationList().Cast<WrenBindForeignClass>()
+                .Select(bindForeignClass => bindForeignClass(WrenVM.GetVM(vm), module, className))
+                .Single(res => res != null);
 
-            var methods = new WrenForeignClassMethodsInternal(result); // Possibly have to save struct, so the delegates aren't GCed
+            // Possibly have to save struct, so the delegates aren't GCed
+            var methods = new WrenForeignClassMethodsInternal(result);
             //classMethods.Add(result, methods);
 
             return methods;
