@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IronWren.AutoMapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -56,6 +57,8 @@ namespace IronWren.ConsoleTesting
                 var isTestClassForeign = vm.GetSlotBool(0);
 
                 Console.WriteLine("Test class is foreign: " + isTestClassForeign);
+
+                vm.AutoMap(typeof(Math));
             }
 
             Console.ReadLine();

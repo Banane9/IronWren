@@ -1,8 +1,7 @@
-﻿using System;
+﻿using IronWren.AutoMapper.StructureMapping;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace IronWren.AutoMapper
 {
@@ -14,7 +13,7 @@ namespace IronWren.AutoMapper
         /// <summary>
         /// Dictionary of generated modules mapped to their names.
         /// </summary>
-        private static readonly Dictionary<string, Module> generatedModules = new Dictionary<string, Module>();
+        private static readonly Dictionary<string, ForeignModule> generatedModules = new Dictionary<string, ForeignModule>();
 
         /// <summary>
         /// HashSet of VMs to which the lookup functions for the AutoMapper have been added.
@@ -22,6 +21,8 @@ namespace IronWren.AutoMapper
         /// HashSet to make lookup O(1) instead of O(n) for lists.
         /// </summary>
         private static readonly HashSet<WrenVM> initializedVMs = new HashSet<WrenVM>();
+
+        private static uint interpetModuleRuns = 0;
 
         /// <summary>
         /// Gets or sets whether a module getting modified after being loaded throws an Exception.
@@ -48,29 +49,51 @@ namespace IronWren.AutoMapper
         /// Automatically maps the given types to make their public interfaces accessible from Wren. Optionally places them into a module
         /// other than the <see cref="WrenVM.InterpetModule"/>.
         /// <para/>
+        /// The generated code will be interpreted immediately.
+        /// </summary>
+        /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
+        /// <param name="targets">The types to map.</param>
+        public static void AutoMap(this WrenVM vm, params Type[] targets)
+        {
+            vm.AutoMap(WrenVM.InterpetModule, targets);
+        }
+
+        /// <summary>
+        /// Automatically maps the given types to make their public interfaces accessible from Wren. Optionally places them into a module
+        /// other than the <see cref="WrenVM.InterpetModule"/>.
+        /// <para/>
         /// If no other module is specified, the generated code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="moduleName">The name of the module to place the types into.</param>
         /// <param name="targets">The types to map.</param>
-        public static void AutoMap(this WrenVM vm, string moduleName = WrenVM.InterpetModule, params Type[] targets)
+        public static void AutoMap(this WrenVM vm, string moduleName, params Type[] targets)
         {
             checkInitialization(vm);
 
-            StringBuilder source;
-            if (moduleName != WrenVM.InterpetModule)
+            ForeignModule module;
+            if (moduleName != WrenVM.InterpetModule && generatedModules.ContainsKey(moduleName))
             {
-                var module = generatedModules.ContainsKey(moduleName) ? generatedModules[moduleName] : new Module();
-                source = module.Source;
+                module = generatedModules[moduleName];
+
+                if (module.Used && TreatModificationAfterLoadAsError)
+                    throw new LoadedModuleModifiedException(moduleName);
             }
             else
-                source = new StringBuilder();
+            {
+                module = new ForeignModule();
 
-            foreach (var target in targets.Select(type => type.GetTypeInfo()))
-                map(target, source);
+                if (moduleName == WrenVM.InterpetModule)
+                    generatedModules.Add($"{moduleName}{interpetModuleRuns++}", module);
+                else
+                    generatedModules.Add(moduleName, module);
+            }
+
+            foreach (var target in targets)
+                module.Add(target);
 
             if (moduleName == WrenVM.InterpetModule)
-                vm.Interpret(source.ToString());
+                vm.Interpret(module.GetSource());
         }
 
         private static void checkInitialization(WrenVM vm)
@@ -82,46 +105,6 @@ namespace IronWren.AutoMapper
             vm.Config.BindForeignMethod += bindAutoMapperMethod;
             vm.Config.BindForeignClass += bindAutoMapperClass;
         }
-
-        private static StringBuilder map(TypeInfo target, StringBuilder source)
-        {
-            // TODO: Inheritance?
-            source.AppendLine($"foreign class {target.Name} {{");
-
-            mapConstants(target, source);
-            mapProperties(target, source);
-            mapConstructors(target, source);
-            mapMethods(target, source);
-            // TODO: Map Events?
-
-            source.AppendLine("}");
-
-            return source;
-        }
-
-        #region Mappers
-
-        private static void mapConstants(TypeInfo target, StringBuilder source)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void mapConstructors(TypeInfo target, StringBuilder source)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void mapMethods(TypeInfo target, StringBuilder source)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void mapProperties(TypeInfo target, StringBuilder source)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion Mappers
 
         #region VM Config Methods
 
