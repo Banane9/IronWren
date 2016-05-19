@@ -10,6 +10,8 @@ namespace IronWren.AutoMapper
     /// </summary>
     public static class AutoMapper
     {
+        internal static readonly Dictionary<WrenVM, List<object>> allocatedObjects = new Dictionary<WrenVM, List<object>>();
+
         /// <summary>
         /// Dictionary of generated modules mapped to their names and VMs.
         /// <para/>
@@ -106,12 +108,23 @@ namespace IronWren.AutoMapper
 
         private static WrenForeignClassMethods bindAutoMapperClass(WrenVM vm, string module, string className)
         {
-            throw new NotImplementedException();
+            if (!generatedModules.ContainsKey(vm)
+                || !generatedModules[vm].ContainsKey(module)
+                || !generatedModules[vm][module].Classes.ContainsKey(className))
+                return null;
+
+            return generatedModules[vm][module].Classes[className].Bind();
         }
 
         private static WrenForeignMethod bindAutoMapperMethod(WrenVM vm, string module, string className, bool isStatic, string signature)
         {
-            throw new NotImplementedException();
+            if (!generatedModules.ContainsKey(vm)
+                || !generatedModules[vm].ContainsKey(module)
+                || !generatedModules[vm][module].Classes.ContainsKey(className)
+                || !generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
+                return null;
+
+            return generatedModules[vm][module].Classes[className].Functions[signature].Bind();
         }
 
         private static string loadAutoMapperModule(WrenVM vm, string name)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,6 +12,7 @@ namespace IronWren.AutoMapper.StructureMapping
     /// </summary>
     internal sealed class ForeignClass
     {
+        private readonly Dictionary<string, List<ForeignFunction>> functions = new Dictionary<string, List<ForeignFunction>>();
         private readonly StringBuilder source = new StringBuilder();
 
         /// <summary>
@@ -18,7 +20,7 @@ namespace IronWren.AutoMapper.StructureMapping
         /// <para/>
         /// Includes everything (methods, properties, fields).
         /// </summary>
-        public Dictionary<string, ForeignFunction> Functions { get; } = new Dictionary<string, ForeignFunction>();
+        public ReadOnlyDictionary<string, ForeignFunction> Functions { get; }
 
         /// <summary>
         /// Gets the TypeInfo of the Type that this ForeignClass targets.
@@ -27,6 +29,8 @@ namespace IronWren.AutoMapper.StructureMapping
 
         public ForeignClass(TypeInfo target)
         {
+            //Functions = new ReadOnlyDictionary<string, ForeignFunction>(functions);
+
             if (target.IsAbstract && !target.IsSealed)
                 throw new ArgumentException("The target class can't be abstract!", nameof(target));
 
@@ -37,30 +41,55 @@ namespace IronWren.AutoMapper.StructureMapping
 
             foreach (var field in target.DeclaredFields.Where(field => field.IsPublic))
             {
-                Functions.Add(field.GetSignature(PropertyType.Get), new ForeignField(field, PropertyType.Get));
+                functions.Add(field.GetSignature(PropertyType.Get), new List<ForeignFunction> { new ForeignField(field, PropertyType.Get) });
 
                 if (!field.IsLiteral && !field.IsInitOnly)
-                    Functions.Add(field.GetSignature(PropertyType.Set), new ForeignField(field, PropertyType.Set));
+                    functions.Add(field.GetSignature(PropertyType.Set), new List<ForeignFunction> { new ForeignField(field, PropertyType.Set) });
             }
 
             foreach (var property in target.DeclaredProperties.Where(property => property.GetMethod.IsPublic || property.SetMethod.IsPublic))
             {
+                // Normal properties can't have the same signature, but indexers can
                 if (property.GetMethod.IsPublic)
-                    Functions.Add(property.GetSignature(PropertyType.Get), new ForeignProperty(property, PropertyType.Get));
+                {
+                    var signature = property.GetSignature(PropertyType.Get);
+
+                    if (!functions.ContainsKey(signature))
+                        functions.Add(signature, new List<ForeignFunction>());
+
+                    functions[signature].Add(new ForeignProperty(property, PropertyType.Get));
+                }
 
                 if (property.SetMethod.IsPublic)
-                    Functions.Add(property.GetSignature(PropertyType.Set), new ForeignProperty(property, PropertyType.Set));
+                {
+                    var signature = property.GetSignature(PropertyType.Set);
+
+                    if (!functions.ContainsKey(signature))
+                        functions.Add(signature, new List<ForeignFunction>());
+
+                    functions[signature].Add(new ForeignProperty(property, PropertyType.Set));
+                }
             }
 
             foreach (var constructor in target.DeclaredConstructors.Where(constructor => constructor.IsPublic))
-                Functions.Add(constructor.GetSignature(), new ForeignConstructor(constructor));
+            {
+                var signature = constructor.GetSignature();
+
+                if (!functions.ContainsKey(signature))
+                    functions.Add(signature, new List<ForeignFunction>());
+
+                functions[signature].Add(new ForeignConstructor(constructor));
+            }
 
             // Generics?
             foreach (var method in target.DeclaredMethods.Where(method => method.IsPublic))
             {
                 var signature = method.GetSignature();
-                if (!Functions.ContainsKey(signature))
-                    Functions.Add(method.GetSignature(), new ForeignMethod(method));
+
+                if (!functions.ContainsKey(signature))
+                    functions.Add(method.GetSignature(), new List<ForeignFunction>());
+
+                functions[signature].Add(new ForeignMethod(method));
             }
         }
 
@@ -75,6 +104,85 @@ namespace IronWren.AutoMapper.StructureMapping
             source.AppendLine("}");
 
             return source.ToString();
+        }
+
+        internal WrenForeignClassMethods Bind()
+        {
+            var foreignClassMethods = new WrenForeignClassMethods();
+
+            foreignClassMethods.Allocate = mapAllocateToConstructor;
+            // TODO: Finalizer?
+
+            return foreignClassMethods;
+        }
+
+        private void mapAllocateToConstructor(WrenVM vm)
+        {
+            var constructor = selectConstructor(vm);
+        }
+
+        private ForeignConstructor selectConstructor(WrenVM vm)
+        {
+            var parameterCount = vm.GetSlotCount() - 1;
+            var signature = $"new({string.Join(",", Enumerable.Repeat("_", parameterCount))})";
+
+            if (!functions.ContainsKey(signature))
+                throw new ArgumentOutOfRangeException("parameterCount", "No constructor with that number of arguments found!");
+
+            var possibleConstructors = functions[signature].Cast<ForeignConstructor>();
+
+            if (possibleConstructors.Count() == 1)
+                return possibleConstructors.First();
+
+            for (var i = 0; i < parameterCount; ++i)
+            {
+                // i + 1 because the first slot is the target/return value
+                switch (vm.GetSlotType(i + 1))
+                {
+                    case WrenType.Bool:
+                        possibleConstructors = possibleConstructors.Where(c => c.Constructor.GetParameters()[i].ParameterType == typeof(bool));
+                        break;
+
+                    case WrenType.Number:
+                        possibleConstructors = possibleConstructors.Where(c =>
+                        {
+                            var pType = c.Constructor.GetParameters()[i].ParameterType;
+
+                            return pType == typeof(byte) || pType == typeof(sbyte)
+                            || pType == typeof(ushort) || pType == typeof(short)
+                            || pType == typeof(uint) || pType == typeof(int)
+                            || pType == typeof(ulong) || pType == typeof(long)
+                            || pType == typeof(float) || pType == typeof(double);
+                        });
+                        break;
+
+                    case WrenType.List:
+                        possibleConstructors = possibleConstructors.Where(c => c.Constructor.GetParameters()[i].ParameterType.GetTypeInfo()
+                            .ImplementedInterfaces.Select(t => t.GetTypeInfo())
+                            .Any(intf => intf.IsGenericType && intf.GetGenericTypeDefinition() == typeof(IEnumerable<>)));
+                        break;
+
+                    case WrenType.String:
+                        possibleConstructors = possibleConstructors.Where(c =>
+                        {
+                            var pType = c.Constructor.GetParameters()[i].ParameterType;
+
+                            return pType == typeof(string) || pType == typeof(byte[]);
+                        });
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                if (possibleConstructors.Count() == 1)
+                    break;
+            }
+
+            if (possibleConstructors.Count() == 0)
+                throw new Exception("No matching constructor found!");
+
+            return possibleConstructors.First();
         }
     }
 }

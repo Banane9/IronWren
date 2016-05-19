@@ -7,13 +7,16 @@ namespace IronWren.AutoMapper.StructureMapping
 {
     internal sealed class ForeignConstructor : ForeignFunction
     {
-        private readonly ConstructorInfo constructor;
-
         private readonly string source;
+
+        /// <summary>
+        /// Gets the <see cref="ConstructorInfo"/> for the foreign constructor.
+        /// </summary>
+        public ConstructorInfo Constructor { get; }
 
         public ForeignConstructor(ConstructorInfo constructor)
         {
-            this.constructor = constructor;
+            Constructor = constructor;
 
             source = $"construct new({string.Join(", ", constructor.GetParameters().Select(p => p.Name))}) {{ }}";
         }
