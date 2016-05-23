@@ -60,6 +60,7 @@
     <Compile Include="AutoMapper\StructureMapping\ForeignProperty.cs" />
     <Compile Include="AutoMapper\StructureMapping\NameHelper.cs" />
     <Compile Include="AutoMapper\StructureMapping\PropertyType.cs" />
+    <Compile Include="AutoMapper\WrenConstructorAttribute.cs" />
     <Compile Include="Delegates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WrenConfig.cs" />

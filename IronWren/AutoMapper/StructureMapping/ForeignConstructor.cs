@@ -14,11 +14,11 @@ namespace IronWren.AutoMapper.StructureMapping
         /// </summary>
         public ConstructorInfo Constructor { get; }
 
-        public ForeignConstructor(ConstructorInfo constructor)
+        public ForeignConstructor(ConstructorInfo constructor, string[] arguments)
         {
             Constructor = constructor;
 
-            source = $"construct new({string.Join(", ", constructor.GetParameters().Select(p => p.Name))}) {{ }}";
+            source = $"construct new({string.Join(", ", arguments)}) {{ }}";
         }
 
         internal override string GetSource()

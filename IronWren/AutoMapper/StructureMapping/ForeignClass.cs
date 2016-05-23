@@ -12,7 +12,7 @@ namespace IronWren.AutoMapper.StructureMapping
     /// </summary>
     internal sealed class ForeignClass
     {
-        private readonly Dictionary<string, List<ForeignFunction>> functions = new Dictionary<string, List<ForeignFunction>>();
+        private readonly Dictionary<string, ForeignFunction> functions = new Dictionary<string, ForeignFunction>();
         private readonly StringBuilder source = new StringBuilder();
 
         /// <summary>
@@ -71,14 +71,28 @@ namespace IronWren.AutoMapper.StructureMapping
                 }
             }
 
-            foreach (var constructor in target.DeclaredConstructors.Where(constructor => constructor.IsPublic))
+            var constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
+                {
+                    if (!ctor.IsPublic)
+                        return false;
+
+                    var parameters = ctor.GetParameters();
+                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
+                });
+
+            if (constructor != null)
             {
-                var signature = constructor.GetSignature();
+                var arguments = constructor.GetCustomAttribute<WrenConstructorAttribute>()?.Arguments ?? WrenConstructorAttribute.DefaultArguments;
 
-                if (!functions.ContainsKey(signature))
-                    functions.Add(signature, new List<ForeignFunction>());
+                foreach (var args in arguments)
+                {
+                    var signature = constructor.GetSignature(args.Length);
 
-                functions[signature].Add(new ForeignConstructor(constructor));
+                    if (functions.ContainsKey(signature))
+                        throw new Exception("Can't have multiple constructors with the same signature!");
+
+                    functions.Add(signature, new ForeignConstructor(constructor, args));
+                }
             }
 
             // Generics?

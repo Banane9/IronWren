@@ -33,9 +33,9 @@ namespace IronWren.AutoMapper.StructureMapping
             return $"{property.Name}=(_)";
         }
 
-        public static string GetSignature(this ConstructorInfo constructor)
+        public static string GetSignature(this ConstructorInfo constructor, int arguments)
         {
-            return $"new({string.Join(",", constructor.GetParameters().Select(p => "_"))})";
+            return $"construct new({string.Join(",", Enumerable.Repeat("_", arguments))})";
         }
 
         public static string GetSignature(this MethodInfo method)
