@@ -21,7 +21,11 @@ namespace IronWren.ConsoleTesting
 
             config.LoadModule += (vm, module) => $"System.print(\"Module [{module}] loaded!\")";
 
-            config.BindForeignMethod += (vm, module, className, isStatic, signature) => { Console.WriteLine($"BindForeignMethod called: It's called {signature} and is it static? {isStatic}"); return sayHi; };
+            config.BindForeignMethod += (vm, module, className, isStatic, signature) =>
+            {
+                Console.WriteLine($"BindForeignMethod called: It's called {signature}, is part of {className} and is {(isStatic ? "static" : "not static")}.");
+                return (signature == "sayHi(_)" ? sayHi : (WrenForeignMethod)null);
+            };
             config.BindForeignClass += (vm, module, className) => new WrenForeignClassMethods { Allocate = alloc };
 
             using (var vm = new WrenVM(config))
@@ -59,6 +63,8 @@ namespace IronWren.ConsoleTesting
                 Console.WriteLine("Test class is foreign: " + isTestClassForeign);
 
                 vm.AutoMap(typeof(WrenMath));
+                vm.Interpret("System.print(\"The sine of pi is: %(WrenMath.sin(WrenMath.pi))!\")");
+                Console.WriteLine($"And C# says it's: {Math.Sin(Math.PI)}");
             }
 
             Console.ReadLine();

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace IronWren.AutoMapper
 {
@@ -10,7 +11,7 @@ namespace IronWren.AutoMapper
     /// </summary>
     public static class AutoMapper
     {
-        internal static readonly Dictionary<WrenVM, List<object>> allocatedObjects = new Dictionary<WrenVM, List<object>>();
+        internal static readonly Dictionary<WrenVM, List<object>> AllocatedObjects = new Dictionary<WrenVM, List<object>>();
 
         /// <summary>
         /// Dictionary of generated modules mapped to their names and VMs.
@@ -20,7 +21,8 @@ namespace IronWren.AutoMapper
         private static readonly Dictionary<WrenVM, Dictionary<string, ForeignModule>> generatedModules =
             new Dictionary<WrenVM, Dictionary<string, ForeignModule>>();
 
-        private static uint interpetModuleRuns = 0;
+        private static readonly Dictionary<WrenVM, Dictionary<string, ForeignClass>> mainModuleClasses =
+            new Dictionary<WrenVM, Dictionary<string, ForeignClass>>();
 
         /// <summary>
         /// Gets or sets whether a module getting modified after being loaded throws an Exception.
@@ -69,8 +71,25 @@ namespace IronWren.AutoMapper
         {
             checkInitialization(vm);
 
+            if (moduleName == WrenVM.InterpetModule)
+            {
+                if (!mainModuleClasses.ContainsKey(vm))
+                    mainModuleClasses.Add(vm, new Dictionary<string, ForeignClass>());
+
+                foreach (var target in targets)
+                {
+                    var foreignClass = new ForeignClass(target.GetTypeInfo());
+
+                    mainModuleClasses[vm].Add(target.Name, foreignClass);
+
+                    vm.Interpret(foreignClass.GetSource());
+                }
+
+                return;
+            }
+
             ForeignModule module;
-            if (moduleName != WrenVM.InterpetModule && generatedModules.ContainsKey(vm) && generatedModules[vm].ContainsKey(moduleName))
+            if (generatedModules.ContainsKey(vm) && generatedModules[vm].ContainsKey(moduleName))
             {
                 module = generatedModules[vm][moduleName];
 
@@ -81,17 +100,18 @@ namespace IronWren.AutoMapper
             {
                 module = new ForeignModule();
 
-                if (moduleName == WrenVM.InterpetModule)
-                    generatedModules[vm].Add($"{moduleName}{interpetModuleRuns++}", module);
-                else
+                if (moduleName != WrenVM.InterpetModule)
                     generatedModules[vm].Add(moduleName, module);
             }
 
             foreach (var target in targets)
                 module.Add(target);
+        }
 
-            if (moduleName == WrenVM.InterpetModule)
-                vm.Interpret(module.GetSource());
+        internal static int AddObject(WrenVM vm, object instance)
+        {
+            AllocatedObjects[vm].Add(instance);
+            return AllocatedObjects[vm].Count - 1;
         }
 
         private static void checkInitialization(WrenVM vm)
@@ -104,6 +124,7 @@ namespace IronWren.AutoMapper
             vm.Config.BindForeignClass += bindAutoMapperClass;
 
             generatedModules.Add(vm, new Dictionary<string, ForeignModule>());
+            AllocatedObjects.Add(vm, new List<object>());
         }
 
         #region VM Config Methods
@@ -120,13 +141,19 @@ namespace IronWren.AutoMapper
 
         private static WrenForeignMethod bindAutoMapperMethod(WrenVM vm, string module, string className, bool isStatic, string signature)
         {
-            if (!generatedModules.ContainsKey(vm)
-                || !generatedModules[vm].ContainsKey(module)
-                || !generatedModules[vm][module].Classes.ContainsKey(className)
-                || !generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
-                return null;
+            if (module == WrenVM.InterpetModule
+                && mainModuleClasses.ContainsKey(vm)
+                && mainModuleClasses[vm].ContainsKey(className)
+                && mainModuleClasses[vm][className].Functions.ContainsKey(signature))
+                return mainModuleClasses[vm][className].Functions[signature].Bind();
 
-            return generatedModules[vm][module].Classes[className].Functions[signature].Bind();
+            if (generatedModules.ContainsKey(vm)
+                && generatedModules[vm].ContainsKey(module)
+                && generatedModules[vm][module].Classes.ContainsKey(className)
+                && generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
+                return generatedModules[vm][module].Classes[className].Functions[signature].Bind();
+
+            return null;
         }
 
         private static string loadAutoMapperModule(WrenVM vm, string name)

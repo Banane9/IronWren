@@ -242,7 +242,7 @@ namespace IronWren
             // Only one of the multiple possible BindForeignMethod implementations must actually return a method.
             var result = BindForeignMethod.GetInvocationList().Cast<WrenBindForeignMethod>()
                 .Select(bindForeignMethod => bindForeignMethod(WrenVM.GetVM(vm), module, className, isStatic, signature))
-                .Single(res => res != null);
+                .SingleOrDefault(res => res != null);
 
             if (result == null)
                 return null;

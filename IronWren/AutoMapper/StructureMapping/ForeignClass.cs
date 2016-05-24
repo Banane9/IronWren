@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace IronWren.AutoMapper.StructureMapping
@@ -12,6 +13,7 @@ namespace IronWren.AutoMapper.StructureMapping
     /// </summary>
     internal sealed class ForeignClass
     {
+        private readonly ConstructorInfo constructor;
         private readonly Dictionary<string, ForeignFunction> functions = new Dictionary<string, ForeignFunction>();
         private readonly StringBuilder source = new StringBuilder();
 
@@ -39,7 +41,7 @@ namespace IronWren.AutoMapper.StructureMapping
 
             Target = target;
 
-            var constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
+            constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
                 {
                     if (!ctor.IsPublic)
                         return false;
@@ -136,15 +138,19 @@ namespace IronWren.AutoMapper.StructureMapping
         {
             var foreignClassMethods = new WrenForeignClassMethods();
 
-            foreignClassMethods.Allocate = mapAllocateToConstructor;
+            foreignClassMethods.Allocate = construct;
             // TODO: Finalizer?
 
             return foreignClassMethods;
         }
 
-        private void mapAllocateToConstructor(WrenVM vm)
+        private void construct(WrenVM vm)
         {
-            var constructor = selectConstructor(vm);
+            var instance = constructor.Invoke(new[] { vm });
+            var id = AutoMapper.AddObject(vm, instance);
+
+            var ptr = vm.SetSlotNewForeign(0, 0, 4);
+            Marshal.WriteInt32(ptr, id);
         }
 
         private ForeignConstructor selectConstructor(WrenVM vm)
