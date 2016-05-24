@@ -11,8 +11,6 @@ namespace IronWren.AutoMapper
     /// </summary>
     public static class AutoMapper
     {
-        internal static readonly Dictionary<WrenVM, List<object>> AllocatedObjects = new Dictionary<WrenVM, List<object>>();
-
         /// <summary>
         /// Dictionary of generated modules mapped to their names and VMs.
         /// <para/>
@@ -108,12 +106,6 @@ namespace IronWren.AutoMapper
                 module.Add(target);
         }
 
-        internal static int AddObject(WrenVM vm, object instance)
-        {
-            AllocatedObjects[vm].Add(instance);
-            return AllocatedObjects[vm].Count - 1;
-        }
-
         private static void checkInitialization(WrenVM vm)
         {
             if (generatedModules.ContainsKey(vm))
@@ -124,7 +116,6 @@ namespace IronWren.AutoMapper
             vm.Config.BindForeignClass += bindAutoMapperClass;
 
             generatedModules.Add(vm, new Dictionary<string, ForeignModule>());
-            AllocatedObjects.Add(vm, new List<object>());
         }
 
         #region VM Config Methods
@@ -145,13 +136,13 @@ namespace IronWren.AutoMapper
                 && mainModuleClasses.ContainsKey(vm)
                 && mainModuleClasses[vm].ContainsKey(className)
                 && mainModuleClasses[vm][className].Functions.ContainsKey(signature))
-                return mainModuleClasses[vm][className].Functions[signature].Bind();
+                return mainModuleClasses[vm][className].Functions[signature].Invoke;
 
             if (generatedModules.ContainsKey(vm)
                 && generatedModules[vm].ContainsKey(module)
                 && generatedModules[vm][module].Classes.ContainsKey(className)
                 && generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
-                return generatedModules[vm][module].Classes[className].Functions[signature].Bind();
+                return generatedModules[vm][module].Classes[className].Functions[signature].Invoke;
 
             return null;
         }

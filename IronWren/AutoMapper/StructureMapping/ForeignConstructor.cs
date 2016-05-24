@@ -21,14 +21,14 @@ namespace IronWren.AutoMapper.StructureMapping
             source = $"construct new({string.Join(", ", arguments)}) {{ }}";
         }
 
-        internal override WrenForeignMethod Bind()
-        {
-            throw new NotSupportedException();
-        }
-
         internal override string GetSource()
         {
             return source;
+        }
+
+        internal override void Invoke(WrenVM vm)
+        {
+            throw new NotSupportedException();
         }
     }
 }

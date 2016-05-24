@@ -10,6 +10,11 @@ namespace IronWren
     /// </summary>
     public class WrenVM : IDisposable
     {
+        /// <summary>
+        /// The name of the module in which calls to <see cref="Interpret(string)"/> are evaluated.
+        /// </summary>
+        public const string InterpetModule = "main";
+
         // Also stops CodeMaid from reorganizing the file
 #if DEBUG
         private const string wren = "Native/wren-debug";
@@ -18,11 +23,6 @@ namespace IronWren
 #endif
 
         private static Dictionary<IntPtr, WrenVM> vms = new Dictionary<IntPtr, WrenVM>();
-
-        /// <summary>
-        /// The name of the module in which calls to <see cref="Interpret(string)"/> are evaluated.
-        /// </summary>
-        public const string InterpetModule = "main";
 
         private IntPtr vm;
 
@@ -40,10 +40,8 @@ namespace IronWren
             vm = newVM(ref config.config);
             vms.Add(vm, this);
 
-            config.Used = true;
-
-            // keep the config/delegates inside it alive
             Config = config;
+            Config.Used = true;
         }
 
         /// <summary>
@@ -330,36 +328,55 @@ namespace IronWren
 
         #region Foreign
 
+        private readonly Dictionary<int, object> foreignObjects = new Dictionary<int, object>();
+
+        private int foreignObjectCounter = 0;
+
         /// <summary>
-        /// Reads a foreign object from the given slot and returns a pointer to the foreign data stored with it.
+        /// Reads a foreign object from the given slot.
         /// <para/>
         /// It is an error to call this if the slot does not contain an instance of a foreign class.
         /// </summary>
-        /// <param name="slot">The slot to read the pointer to the foreign data from.</param>
-        /// <returns>The pointer to the foreign data.</returns>
-        public IntPtr GetSlotForeign(int slot)
+        /// <param name="slot">The slot to read the foreign object from.</param>
+        /// <returns>The foreign object.</returns>
+        public object GetSlotForeign(int slot)
         {
-            return getSlotForeign(vm, slot);
+            var dataPtr = getSlotForeign(vm, slot);
+            var objectId = Marshal.ReadInt32(dataPtr);
+
+            if (!foreignObjects.ContainsKey(objectId))
+                throw new Exception("No foreign object with that Id found!");
+
+            return foreignObjects[objectId];
         }
 
         /// <summary>
-        /// Creates a new instance of the foreign class stored in [classSlot] with the given amount of
-        /// bytes of raw storage and places the resulting object in the given slot.
-        /// <para/>
-        /// This does not invoke the foreign class's constructor on the new instance. If
-        /// you need that to happen, call the constructor from Wren, which will then
-        /// call the allocator foreign method. In there, call this to create the object
-        /// and then the constructor will be invoked when the allocator returns.
-        /// <para/>
-        /// Returns a pointer to the foreign object's data.
+        /// Stores the given object in the given slot.
         /// </summary>
-        /// <param name="slot">The slot to create the new instance of the foreign class in.</param>
-        /// <param name="classSlot"></param>
-        /// <param name="size">The size of data in bytes.</param>
-        /// <returns>A pointer to the foreign object's data.</returns>
-        public IntPtr SetSlotNewForeign(int slot, int classSlot, uint size)
+        /// <param name="slot">The slot to store the data in.</param>
+        /// <param name="foreignObject">The object to store.</param>
+        public void SetSlotNewForeign(int slot, object foreignObject)
         {
-            return setSlotNewForeign(vm, slot, classSlot, size);
+            var objectId = foreignObjectCounter++;
+
+            foreignObjects.Add(objectId, foreignObject);
+
+            var dataPtr = setSlotNewForeign(vm, slot, 0, sizeof(int));
+            Marshal.WriteInt32(dataPtr, objectId);
+        }
+
+        internal object GetAndFreeForeign(IntPtr dataPtr)
+        {
+            var objectId = Marshal.ReadInt32(dataPtr);
+
+            if (!foreignObjects.ContainsKey(objectId))
+                throw new Exception("No foreign object with that Id found!");
+
+            var foreignObject = foreignObjects[objectId];
+
+            foreignObjects.Remove(objectId);
+
+            return foreignObject;
         }
 
         #endregion Foreign
@@ -512,6 +529,21 @@ namespace IronWren
         [DllImport(wren, EntryPoint = "wrenGetSlotForeign", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr getSlotForeign(IntPtr vm, int slot);
 
+        /// <summary>
+        /// Creates a new instance of the foreign class stored in [classSlot] with the given amount of
+        /// bytes of raw storage and places the resulting object in the given slot.
+        /// <para/>
+        /// This does not invoke the foreign class's constructor on the new instance. If
+        /// you need that to happen, call the constructor from Wren, which will then
+        /// call the allocator foreign method. In there, call this to create the object
+        /// and then the constructor will be invoked when the allocator returns.
+        /// <para/>
+        /// Returns a pointer to the foreign object's data.
+        /// </summary>
+        /// <param name="slot">The slot to create the new instance of the foreign class in.</param>
+        /// <param name="classSlot"></param>
+        /// <param name="size">The size of data in bytes.</param>
+        /// <returns>A pointer to the foreign object's data.</returns>
         [DllImport(wren, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr setSlotNewForeign(IntPtr vm, int slot, int classSlot, uint size);
 

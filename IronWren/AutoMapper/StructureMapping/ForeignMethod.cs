@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace IronWren.AutoMapper.StructureMapping
 {
@@ -22,25 +21,17 @@ namespace IronWren.AutoMapper.StructureMapping
             source = $"foreign{(method.IsStatic ? " static " : " ")}{methodAttribute.Name}({string.Join(", ", methodAttribute.Arguments)})";
         }
 
-        internal override WrenForeignMethod Bind()
-        {
-            return invoke;
-        }
-
         internal override string GetSource()
         {
             return source;
         }
 
-        private void invoke(WrenVM vm)
+        internal override void Invoke(WrenVM vm)
         {
             object instance = null;
 
             if (!Method.IsStatic)
-            {
-                var id = Marshal.ReadInt32(vm.GetSlotForeign(0));
-                instance = AutoMapper.AllocatedObjects[vm][id];
-            }
+                instance = vm.GetSlotForeign(0);
 
             Method.Invoke(instance, new[] { vm });
         }

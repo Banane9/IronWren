@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace IronWren
 {
+    /// <summary>
+    /// Represents the configuration used by the <see cref="WrenVM"/>.
+    /// </summary>
     public class WrenConfig
     {
         // Also stops CodeMaid from reorganizing the file

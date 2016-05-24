@@ -27,7 +27,7 @@ namespace IronWren
 
     #endregion WrenBindForeignClass
 
-    #region WrenForeignMethod
+    #region WrenBindForeignMethod
 
     /// <summary>
     /// The callback Wren uses to find a foreign method and bind it to a class.
@@ -48,6 +48,31 @@ namespace IronWren
     /// <returns>The bound function or null if none was found.</returns>
     public delegate WrenForeignMethod WrenBindForeignMethod(WrenVM vm, string module, string className, bool isStatic, string signature);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.FunctionPtr)]
+    internal delegate WrenForeignMethodInternal WrenBindForeignMethodInternal(
+        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module,
+        [MarshalAs(UnmanagedType.LPStr)]string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)]string signature);
+
+    #endregion WrenBindForeignMethod
+
+    #region WrenFinalizer
+
+    /// <summary>
+    /// The callback invoked when the garbage collector is about to collect a foreign object.
+    /// <para/>
+    /// This may be null if the foreign class does not need to finalize.
+    /// </summary>
+    /// <param name="foreignObject">The foreign object about to be collected.</param>
+    public delegate void WrenFinalizer(object foreignObject);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void WrenFinalizerInternal(IntPtr data);
+
+    #endregion WrenFinalizer
+
+    #region WrenForeignMethod
+
     /// <summary>
     /// A function callable from Wren code, but implemented in C#.
     /// </summary>
@@ -55,21 +80,9 @@ namespace IronWren
     public delegate void WrenForeignMethod(WrenVM vm);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    [return: MarshalAs(UnmanagedType.FunctionPtr)]
-    internal delegate WrenForeignMethodInternal WrenBindForeignMethodInternal(
-        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module,
-        [MarshalAs(UnmanagedType.LPStr)]string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)]string signature);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void WrenForeignMethodInternal(IntPtr vm);
 
     #endregion WrenForeignMethod
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void WrenError(WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void WrenFinalizer(IntPtr data);
 
     #region WrenLoadModule
 
@@ -98,6 +111,9 @@ namespace IronWren
     internal delegate IntPtr WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
 
     #endregion WrenLoadModule
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void WrenError(WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate IntPtr WrenReallocate(IntPtr memory, uint size);

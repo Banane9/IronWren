@@ -10,7 +10,7 @@ namespace IronWren.ConsoleTesting
         private static void alloc(WrenVM vm)
         {
             Console.WriteLine("Allocator called!");
-            vm.SetSlotNewForeign(0, 0, 1);
+            vm.SetSlotNewForeign(0, 1);
         }
 
         private static void Main(string[] args)

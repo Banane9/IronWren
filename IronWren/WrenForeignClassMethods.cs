@@ -18,35 +18,54 @@ namespace IronWren
                 Allocate = IntPtr.Zero;
 
             if (methods.Finalize != null)
-                Finalize = Marshal.GetFunctionPointerForDelegate(methods.Finalize);
+                Finalize = Marshal.GetFunctionPointerForDelegate((WrenFinalizerInternal)methods.FinalizeInternal);
             else
                 Finalize = IntPtr.Zero;
         }
     }
 
+    /// <summary>
+    /// Contains the callbacks called by the <see cref="WrenVM"/> when a foreign object is allocated/finalized.
+    /// </summary>
     public class WrenForeignClassMethods
     {
+        private WrenVM usedVM;
+
         /// <summary>
         /// The callback invoked when the foreign object is created.
         /// <para/>
         /// This must be provided. Inside the body of this, it must call
         /// <see cref="WrenVM.SetSlotNewForeign(int, int, uint)"/> exactly once.
         /// </summary>
-        public WrenForeignMethod Allocate;
+        public WrenForeignMethod Allocate { get; set; }
 
         /// <summary>
         /// The callback invoked when the garbage collector is about to collect a foreign object's memory.
         /// <para/>
+        /// Only the object is provided, as the method may not interact with the VM.
+        /// <para/>
         /// This may be null if the foreign class does not need to finalize.
         /// </summary>
-        public WrenFinalizer Finalize;
+        public WrenFinalizer Finalize { get; set; }
 
         internal void AllocateInternal(IntPtr vm)
         {
             if (Allocate == null)
                 return;
 
-            Allocate(WrenVM.GetVM(vm));
+            var usedVM = WrenVM.GetVM(vm);
+
+            Allocate(usedVM);
+        }
+
+        internal void FinalizeInternal(IntPtr dataPtr)
+        {
+            var foreignObject = usedVM.GetAndFreeForeign(dataPtr);
+
+            if (Finalize == null)
+                return;
+
+            Finalize(foreignObject);
         }
     }
 }

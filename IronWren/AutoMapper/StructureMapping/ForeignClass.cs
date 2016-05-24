@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace IronWren.AutoMapper.StructureMapping
@@ -147,10 +146,8 @@ namespace IronWren.AutoMapper.StructureMapping
         private void construct(WrenVM vm)
         {
             var instance = constructor.Invoke(new[] { vm });
-            var id = AutoMapper.AddObject(vm, instance);
 
-            var ptr = vm.SetSlotNewForeign(0, 0, 4);
-            Marshal.WriteInt32(ptr, id);
+            vm.SetSlotNewForeign(0, instance);
         }
 
         private ForeignConstructor selectConstructor(WrenVM vm)

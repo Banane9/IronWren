@@ -6,8 +6,8 @@ namespace IronWren.AutoMapper.StructureMapping
 {
     internal abstract class ForeignFunction
     {
-        internal abstract WrenForeignMethod Bind();
-
         internal abstract string GetSource();
+
+        internal abstract void Invoke(WrenVM vm);
     }
 }
