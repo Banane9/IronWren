@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IronWren.AutoMapper.StructureMapping
+namespace IronWren.AutoMapper
 {
-    internal enum PropertyType
+    public enum PropertyType
     {
         Get,
         Set

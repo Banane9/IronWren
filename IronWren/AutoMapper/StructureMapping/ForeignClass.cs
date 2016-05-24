@@ -29,47 +29,15 @@ namespace IronWren.AutoMapper.StructureMapping
 
         public ForeignClass(TypeInfo target)
         {
-            //Functions = new ReadOnlyDictionary<string, ForeignFunction>(functions);
+            Functions = new ReadOnlyDictionary<string, ForeignFunction>(functions);
 
             if (target.IsAbstract && !target.IsSealed)
-                throw new ArgumentException("The target class can't be abstract!", nameof(target));
+                throw new ArgumentException("The target type can't be abstract!", nameof(target));
 
             if (target.IsGenericType && target.GetGenericTypeDefinition() == target.AsType())
-                throw new ArgumentException("The target class can't be an undefined generic!", nameof(target));
+                throw new ArgumentException("The target type can't be an undefined generic!", nameof(target));
 
             Target = target;
-
-            foreach (var field in target.DeclaredFields.Where(field => field.IsPublic))
-            {
-                functions.Add(field.GetSignature(PropertyType.Get), new List<ForeignFunction> { new ForeignField(field, PropertyType.Get) });
-
-                if (!field.IsLiteral && !field.IsInitOnly)
-                    functions.Add(field.GetSignature(PropertyType.Set), new List<ForeignFunction> { new ForeignField(field, PropertyType.Set) });
-            }
-
-            foreach (var property in target.DeclaredProperties.Where(property => property.GetMethod.IsPublic || property.SetMethod.IsPublic))
-            {
-                // Normal properties can't have the same signature, but indexers can
-                if (property.GetMethod.IsPublic)
-                {
-                    var signature = property.GetSignature(PropertyType.Get);
-
-                    if (!functions.ContainsKey(signature))
-                        functions.Add(signature, new List<ForeignFunction>());
-
-                    functions[signature].Add(new ForeignProperty(property, PropertyType.Get));
-                }
-
-                if (property.SetMethod.IsPublic)
-                {
-                    var signature = property.GetSignature(PropertyType.Set);
-
-                    if (!functions.ContainsKey(signature))
-                        functions.Add(signature, new List<ForeignFunction>());
-
-                    functions[signature].Add(new ForeignProperty(property, PropertyType.Set));
-                }
-            }
 
             var constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
                 {
@@ -82,28 +50,72 @@ namespace IronWren.AutoMapper.StructureMapping
 
             if (constructor != null)
             {
-                var arguments = constructor.GetCustomAttribute<WrenConstructorAttribute>()?.Arguments ?? WrenConstructorAttribute.DefaultArguments;
+                var wrenConstructors = constructor.GetCustomAttributes<WrenConstructorAttribute>().ToArray();
 
-                foreach (var args in arguments)
+                if (wrenConstructors.Length == 0)
                 {
-                    var signature = constructor.GetSignature(args.Length);
+                    var signature = Signature.MakeConstructor(WrenConstructorAttribute.DefaultArguments.Length);
 
-                    if (functions.ContainsKey(signature))
-                        throw new Exception("Can't have multiple constructors with the same signature!");
-
-                    functions.Add(signature, new ForeignConstructor(constructor, args));
+                    functions.Add(signature, new ForeignConstructor(constructor, WrenConstructorAttribute.DefaultArguments));
                 }
+                else
+                    foreach (var wrenConstructor in wrenConstructors)
+                    {
+                        var signature = Signature.MakeConstructor(wrenConstructor.Arguments.Length);
+
+                        if (functions.ContainsKey(signature))
+                            throw new Exception("Can't have multiple constructors with the same signature!");
+
+                        functions.Add(signature, new ForeignConstructor(constructor, wrenConstructor.Arguments));
+                    }
             }
 
             // Generics?
-            foreach (var method in target.DeclaredMethods.Where(method => method.IsPublic))
+            foreach (var method in target.DeclaredMethods.Where(method =>
+                {
+                    if (!method.IsPublic || method.ReturnType != typeof(void))
+                        return false;
+
+                    var parameters = method.GetParameters();
+                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
+                }))
             {
-                var signature = method.GetSignature();
+                var propertyAttribute = method.GetCustomAttribute<WrenPropertyAttribute>();
+                if (propertyAttribute != null)
+                {
+                    var signature = Signature.MakeProperty(propertyAttribute.Type, propertyAttribute.Name);
 
-                if (!functions.ContainsKey(signature))
-                    functions.Add(method.GetSignature(), new List<ForeignFunction>());
+                    if (functions.ContainsKey(signature))
+                        throw new Exception("Can't have multiple properties with the same signature!");
 
-                functions[signature].Add(new ForeignMethod(method));
+                    functions.Add(signature, new ForeignProperty(method, propertyAttribute));
+
+                    continue;
+                }
+
+                var indexerAttribute = method.GetCustomAttribute<WrenIndexerAttribute>();
+                if (indexerAttribute != null)
+                {
+                    var signature = Signature.MakeIndexer(indexerAttribute.Type, indexerAttribute.Name, indexerAttribute.Arguments.Length);
+
+                    if (functions.ContainsKey(signature))
+                        throw new Exception("Can't have multiple indexers with the same signature!");
+
+                    functions.Add(signature, new ForeignIndexer(method, indexerAttribute));
+
+                    continue;
+                }
+
+                var methodAttributes = method.GetCustomAttributes<WrenMethodAttribute>();
+                foreach (var methodAttribute in methodAttributes)
+                {
+                    var signature = Signature.MakeMethod(methodAttribute.Name, methodAttribute.Arguments.Length);
+
+                    if (functions.ContainsKey(signature))
+                        throw new Exception("Can't have multiple methods with the same signature!");
+
+                    functions.Add(signature, new ForeignMethod(method, methodAttribute));
+                }
             }
         }
 
@@ -112,8 +124,8 @@ namespace IronWren.AutoMapper.StructureMapping
             // TODO: Inheritance?
             source.AppendLine($"foreign class {Target.Name} {{");
 
-            foreach (var foreignMethod in Functions.Values)
-                source.AppendLine(foreignMethod.GetSource());
+            foreach (var foreignFunction in Functions.Values)
+                source.AppendLine(foreignFunction.GetSource());
 
             source.AppendLine("}");
 
@@ -143,7 +155,7 @@ namespace IronWren.AutoMapper.StructureMapping
             if (!functions.ContainsKey(signature))
                 throw new ArgumentOutOfRangeException("parameterCount", "No constructor with that number of arguments found!");
 
-            var possibleConstructors = functions[signature].Cast<ForeignConstructor>();
+            IEnumerable<ForeignConstructor> possibleConstructors = null; //functions[signature].Cast<ForeignConstructor>();
 
             if (possibleConstructors.Count() == 1)
                 return possibleConstructors.First();

@@ -5,36 +5,39 @@ using System.Linq;
 namespace IronWren.AutoMapper
 {
     /// <summary>
-    /// Optional attribute that specifies how many arguments the constructor(s) on the Wren side should have.
+    /// Optional attribute that specifies which arguments the constructor on the Wren side should have.
+    /// Must have a single argument of type <see cref="WrenVM"/>.
+    /// <para/>
+    /// Multiple attributes can be used if there should be multiple constructors on the Wren side.
     /// <para/>
     /// If no attribute is provided, one constructor with zero arguments will be assumed.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Constructor, Inherited = false, AllowMultiple = true)]
     public sealed class WrenConstructorAttribute : Attribute
     {
         /// <summary>
         /// Gets the default arguments in case no attribute is provided.
         /// <para/>
-        /// One constructor without arguments.
+        /// Constructor without arguments.
         /// </summary>
-        public static string[][] DefaultArguments { get; } = new[] { new string[0] };
+        public static string[] DefaultArguments { get; } = new string[0];
 
         /// <summary>
-        /// Gets the different named arguments for the constructor(s) on the Wren side.
+        /// Gets the named arguments for the constructor on the Wren side.
         /// </summary>
-        public string[][] Arguments { get; }
+        public string[] Arguments { get; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenConstructorAttribute"/> class
-        /// with the given named arguments for the constructor(s) on the Wren side.
+        /// with the given named arguments for the constructor on the Wren side.
         /// </summary>
-        /// <param name="arguments">An array of arrays containing the named arguments for the constructor(s).</param>
-        public WrenConstructorAttribute(params string[][] arguments)
+        /// <param name="arguments">An array containing the named arguments for the constructor.</param>
+        public WrenConstructorAttribute(params string[] arguments)
         {
-            arguments = arguments ?? new string[0][];
+            arguments = arguments ?? new string[0];
 
-            if (!arguments.All(args => args.All(arg => arg != null)))
-                throw new ArgumentOutOfRangeException(nameof(arguments), "Argument count must be greater or equal to zero!");
+            if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
+                throw new ArgumentException("Argument names may not be null or whitespace!", nameof(arguments));
 
             Arguments = arguments;
         }

@@ -14,11 +14,11 @@ namespace IronWren.AutoMapper.StructureMapping
         /// </summary>
         public MethodInfo Method { get; }
 
-        public ForeignMethod(MethodInfo method)
+        public ForeignMethod(MethodInfo method, WrenMethodAttribute methodAttribute)
         {
             Method = method;
 
-            source = $"foreign{(method.IsStatic ? " static " : " ")}{method.Name}({string.Join(", ", method.GetParameters().Select(p => p.Name))})";
+            source = $"foreign{(method.IsStatic ? " static " : " ")}{methodAttribute.Name}({string.Join(", ", methodAttribute.Arguments)})";
         }
 
         internal override string GetSource()

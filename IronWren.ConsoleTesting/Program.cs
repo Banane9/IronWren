@@ -58,7 +58,7 @@ namespace IronWren.ConsoleTesting
 
                 Console.WriteLine("Test class is foreign: " + isTestClassForeign);
 
-                vm.AutoMap(typeof(Math));
+                vm.AutoMap(typeof(WrenMath));
             }
 
             Console.ReadLine();

@@ -7,32 +7,18 @@ namespace IronWren.AutoMapper.StructureMapping
 {
     internal sealed class ForeignProperty : ForeignFunction
     {
-        private readonly bool isIndexer;
-        private readonly PropertyInfo property;
+        private readonly MethodInfo method;
 
         private readonly string source;
 
-        public ForeignProperty(PropertyInfo property, PropertyType type)
+        public ForeignProperty(MethodInfo method, WrenPropertyAttribute propertyAttribute)
         {
-            this.property = property;
+            this.method = method;
 
-            var indexParameters = property.GetIndexParameters().Select(p => p.Name).ToArray();
-            if (indexParameters.Length > 0)
-            {
-                isIndexer = true;
-
-                if (type == PropertyType.Get)
-                    source = $"foreign{(property.GetMethod.IsStatic ? " static " : " ")}[{string.Join(", ", indexParameters)}]";
-                else
-                    source = $"foreign{(property.SetMethod.IsStatic ? " static " : " ")}[{string.Join(", ", indexParameters)}]=(value)";
-            }
+            if (propertyAttribute.Type == PropertyType.Get)
+                source = $"foreign{(method.IsStatic ? " static " : " ")}{propertyAttribute.Name}";
             else
-            {
-                if (type == PropertyType.Get)
-                    source = $"foreign{(property.GetMethod.IsStatic ? " static " : " ")}{property.Name}";
-                else
-                    source = $"foreign{(property.GetMethod.IsStatic ? " static " : " ")}{property.Name}=(value)";
-            }
+                source = $"foreign{(method.IsStatic ? " static " : " ")}{propertyAttribute.Name}=({propertyAttribute.Argument})";
         }
 
         internal override string GetSource()

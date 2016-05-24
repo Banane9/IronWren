@@ -102,6 +102,8 @@ namespace IronWren.AutoMapper
             vm.Config.LoadModule += loadAutoMapperModule;
             vm.Config.BindForeignMethod += bindAutoMapperMethod;
             vm.Config.BindForeignClass += bindAutoMapperClass;
+
+            generatedModules.Add(vm, new Dictionary<string, ForeignModule>());
         }
 
         #region VM Config Methods
