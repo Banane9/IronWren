@@ -57,11 +57,11 @@
     <Compile Include="AutoMapper\ForeignModule.cs" />
     <Compile Include="AutoMapper\Signature.cs" />
     <Compile Include="AutoMapper\PropertyType.cs" />
-    <Compile Include="AutoMapper\WrenClassAttribute.cs" />
-    <Compile Include="AutoMapper\WrenConstructorAttribute.cs" />
-    <Compile Include="AutoMapper\WrenIndexerAttribute.cs" />
-    <Compile Include="AutoMapper\WrenMethodAttribute.cs" />
-    <Compile Include="AutoMapper\WrenPropertyAttribute.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenClassAttribute.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenConstructorAttribute.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenIndexerAttribute.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenMethodAttribute.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenPropertyAttribute.cs" />
     <Compile Include="Delegates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WrenConfig.cs" />

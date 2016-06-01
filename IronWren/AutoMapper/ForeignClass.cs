@@ -14,7 +14,7 @@ namespace IronWren.AutoMapper
     {
         private readonly ConstructorInfo constructor;
         private readonly Dictionary<string, WrenForeignMethod> functions = new Dictionary<string, WrenForeignMethod>();
-        private readonly StringBuilder source = new StringBuilder();
+        private readonly string source;
 
         /// <summary>
         /// Gets the <see cref="WrenForeignMethod"/>s that are part of the class.
@@ -30,8 +30,6 @@ namespace IronWren.AutoMapper
 
         public ForeignClass(TypeInfo target)
         {
-            Functions = new ReadOnlyDictionary<string, WrenForeignMethod>(functions);
-
             if (target.IsAbstract && !target.IsSealed)
                 throw new ArgumentException("The target type can't be abstract!", nameof(target));
 
@@ -39,37 +37,14 @@ namespace IronWren.AutoMapper
                 throw new ArgumentException("The target type can't be an undefined generic!", nameof(target));
 
             Target = target;
+            Functions = new ReadOnlyDictionary<string, WrenForeignMethod>(functions);
 
-            constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
-                {
-                    if (!ctor.IsPublic)
-                        return false;
+            var sourceBuilder = new StringBuilder();
 
-                    var parameters = ctor.GetParameters();
-                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
-                });
+            var classAttribute = Target.GetCustomAttribute<WrenClassAttribute>();
+            sourceBuilder.AppendLine($"foreign class {(classAttribute?.Name ?? Target.Name)} {{");
 
-            //if (constructor != null)
-            //{
-            //    var wrenConstructors = constructor.GetCustomAttributes<WrenConstructorAttribute>().ToArray();
-
-            //    if (wrenConstructors.Length == 0)
-            //    {
-            //        var signature = Signature.MakeConstructor(WrenConstructorAttribute.DefaultArguments.Length);
-
-            //        functions.Add(signature, new ForeignConstructor(constructor, WrenConstructorAttribute.DefaultArguments));
-            //    }
-            //    else
-            //        foreach (var wrenConstructor in wrenConstructors)
-            //        {
-            //            var signature = Signature.MakeConstructor(wrenConstructor.Arguments.Length);
-
-            //            if (functions.ContainsKey(signature))
-            //                throw new Exception("Can't have multiple constructors with the same signature!");
-
-            //            functions.Add(signature, new ForeignConstructor(constructor, wrenConstructor.Arguments));
-            //        }
-            //}
+            constructor = makeConstructors(sourceBuilder);
 
             // Generics?
             foreach (var method in target.DeclaredMethods.Where(method =>
@@ -90,6 +65,7 @@ namespace IronWren.AutoMapper
                         throw new Exception("Can't have multiple properties with the same signature!");
 
                     functions.Add(signature, getInvoker(method));
+                    sourceBuilder.AppendLine(Definition.MakeProperty(method));
 
                     continue;
                 }
@@ -103,6 +79,7 @@ namespace IronWren.AutoMapper
                         throw new Exception("Can't have multiple indexers with the same signature!");
 
                     functions.Add(signature, getInvoker(method));
+                    sourceBuilder.AppendLine(Definition.MakeIndexer(method));
 
                     continue;
                 }
@@ -116,23 +93,18 @@ namespace IronWren.AutoMapper
                         throw new Exception("Can't have multiple methods with the same signature!");
 
                     functions.Add(signature, getInvoker(method));
+                    sourceBuilder.AppendLine(Definition.MakeMethod(method));
                 }
+
+                sourceBuilder.AppendLine("}");
+
+                source = sourceBuilder.ToString();
             }
         }
 
         public string GetSource()
         {
-            var classAttribute = Target.GetCustomAttribute<WrenClassAttribute>();
-
-            // TODO: Inheritance?
-            source.AppendLine($"foreign class {(classAttribute?.Name ?? Target.Name)} {{");
-
-            foreach (var foreignFunction in Functions.Values)
-                source.AppendLine(foreignFunction.GetSource());
-
-            source.AppendLine("}");
-
-            return source.ToString();
+            return source;
         }
 
         internal WrenForeignClassMethods Bind()
@@ -147,6 +119,7 @@ namespace IronWren.AutoMapper
 
         private static WrenForeignMethod getInvoker(MethodInfo method)
         {
+            // TODO: Make this a compiled Expression<WrenForeignMethod>?
             return (vm) =>
             {
                 object instance = null;
@@ -163,6 +136,32 @@ namespace IronWren.AutoMapper
             var instance = constructor.Invoke(new[] { vm });
 
             vm.SetSlotNewForeign(0, instance);
+        }
+
+        private ConstructorInfo makeConstructors(StringBuilder sourceBuilder)
+        {
+            var constructor = Target.DeclaredConstructors.SingleOrDefault(ctor =>
+            {
+                if (!ctor.IsPublic)
+                    return false;
+
+                var parameters = ctor.GetParameters();
+
+                return parameters.Length != 1 && parameters[0].ParameterType != typeof(WrenVM);
+            });
+
+            if (constructor != null)
+            {
+                var wrenConstructors = constructor.GetCustomAttributes<WrenConstructorAttribute>().ToArray();
+
+                if (wrenConstructors.Length == 0)
+                    sourceBuilder.AppendLine(Definition.MakeConstructor());
+                else
+                    foreach (var wrenConstructor in wrenConstructors)
+                        sourceBuilder.AppendLine(Definition.MakeConstructor(wrenConstructor.Arguments));
+            }
+
+            return constructor;
         }
     }
 }
