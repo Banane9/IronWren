@@ -61,6 +61,7 @@
     <Compile Include="AutoMapper\StructureMapping\ForeignProperty.cs" />
     <Compile Include="AutoMapper\Signature.cs" />
     <Compile Include="AutoMapper\PropertyType.cs" />
+    <Compile Include="AutoMapper\WrenClassAttribute.cs" />
     <Compile Include="AutoMapper\WrenConstructorAttribute.cs" />
     <Compile Include="AutoMapper\WrenIndexerAttribute.cs" />
     <Compile Include="AutoMapper\WrenMethodAttribute.cs" />

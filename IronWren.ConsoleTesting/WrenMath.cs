@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace IronWren.ConsoleTesting
 {
+    [WrenClass("Math")]
     public static class WrenMath
     {
         [WrenProperty(PropertyType.Get, "pi")]

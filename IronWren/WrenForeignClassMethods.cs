@@ -53,7 +53,7 @@ namespace IronWren
             if (Allocate == null)
                 return;
 
-            var usedVM = WrenVM.GetVM(vm);
+            usedVM = WrenVM.GetVM(vm);
 
             Allocate(usedVM);
         }

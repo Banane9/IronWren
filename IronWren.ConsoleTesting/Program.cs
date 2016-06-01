@@ -63,7 +63,7 @@ namespace IronWren.ConsoleTesting
                 Console.WriteLine("Test class is foreign: " + isTestClassForeign);
 
                 vm.AutoMap(typeof(WrenMath));
-                vm.Interpret("System.print(\"The sine of pi is: %(WrenMath.sin(WrenMath.pi))!\")");
+                vm.Interpret("System.print(\"The sine of pi is: %(Math.sin(Math.pi))!\")");
                 Console.WriteLine($"And C# says it's: {Math.Sin(Math.PI)}");
             }
 

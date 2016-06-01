@@ -122,8 +122,10 @@ namespace IronWren.AutoMapper.StructureMapping
 
         public string GetSource()
         {
+            var classAttribute = Target.GetCustomAttribute<WrenClassAttribute>();
+
             // TODO: Inheritance?
-            source.AppendLine($"foreign class {Target.Name} {{");
+            source.AppendLine($"foreign class {(classAttribute?.Name ?? Target.Name)} {{");
 
             foreach (var foreignFunction in Functions.Values)
                 source.AppendLine(foreignFunction.GetSource());
@@ -148,70 +150,6 @@ namespace IronWren.AutoMapper.StructureMapping
             var instance = constructor.Invoke(new[] { vm });
 
             vm.SetSlotNewForeign(0, instance);
-        }
-
-        private ForeignConstructor selectConstructor(WrenVM vm)
-        {
-            var parameterCount = vm.GetSlotCount() - 1;
-            var signature = $"new({string.Join(",", Enumerable.Repeat("_", parameterCount))})";
-
-            if (!functions.ContainsKey(signature))
-                throw new ArgumentOutOfRangeException("parameterCount", "No constructor with that number of arguments found!");
-
-            IEnumerable<ForeignConstructor> possibleConstructors = null; //functions[signature].Cast<ForeignConstructor>();
-
-            if (possibleConstructors.Count() == 1)
-                return possibleConstructors.First();
-
-            for (var i = 0; i < parameterCount; ++i)
-            {
-                // i + 1 because the first slot is the target/return value
-                switch (vm.GetSlotType(i + 1))
-                {
-                    case WrenType.Bool:
-                        possibleConstructors = possibleConstructors.Where(c => c.Constructor.GetParameters()[i].ParameterType == typeof(bool));
-                        break;
-
-                    case WrenType.Number:
-                        possibleConstructors = possibleConstructors.Where(c =>
-                        {
-                            var pType = c.Constructor.GetParameters()[i].ParameterType;
-
-                            return pType == typeof(byte) || pType == typeof(sbyte)
-                            || pType == typeof(ushort) || pType == typeof(short)
-                            || pType == typeof(uint) || pType == typeof(int)
-                            || pType == typeof(ulong) || pType == typeof(long)
-                            || pType == typeof(float) || pType == typeof(double);
-                        });
-                        break;
-
-                    case WrenType.List:
-                        possibleConstructors = possibleConstructors.Where(c => c.Constructor.GetParameters()[i].ParameterType.GetTypeInfo()
-                            .ImplementedInterfaces.Select(t => t.GetTypeInfo())
-                            .Any(intf => intf.IsGenericType && intf.GetGenericTypeDefinition() == typeof(IEnumerable<>)));
-                        break;
-
-                    case WrenType.String:
-                        possibleConstructors = possibleConstructors.Where(c =>
-                        {
-                            var pType = c.Constructor.GetParameters()[i].ParameterType;
-
-                            return pType == typeof(string) || pType == typeof(byte[]);
-                        });
-                        break;
-
-                    default:
-                        continue;
-                }
-
-                if (possibleConstructors.Count() == 1)
-                    break;
-            }
-
-            if (possibleConstructors.Count() == 0)
-                throw new Exception("No matching constructor found!");
-
-            return possibleConstructors.First();
         }
     }
 }
