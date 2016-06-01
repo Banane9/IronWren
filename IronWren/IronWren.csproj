@@ -51,14 +51,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoMapper\AutoMapper.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignClass.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignConstructor.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignFunction.cs" />
+    <Compile Include="AutoMapper\Definition.cs" />
+    <Compile Include="AutoMapper\ForeignClass.cs" />
     <Compile Include="AutoMapper\LoadedModuleModifiedException.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignIndexer.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignMethod.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignModule.cs" />
-    <Compile Include="AutoMapper\StructureMapping\ForeignProperty.cs" />
+    <Compile Include="AutoMapper\ForeignModule.cs" />
     <Compile Include="AutoMapper\Signature.cs" />
     <Compile Include="AutoMapper\PropertyType.cs" />
     <Compile Include="AutoMapper\WrenClassAttribute.cs" />

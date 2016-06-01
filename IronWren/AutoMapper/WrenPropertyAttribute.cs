@@ -13,11 +13,6 @@ namespace IronWren.AutoMapper
     public sealed class WrenPropertyAttribute : Attribute
     {
         /// <summary>
-        /// Gets the name of the argument for the property on the Wren side.
-        /// </summary>
-        public string Argument { get; }
-
-        /// <summary>
         /// Gets the name of the property on the Wren side.
         /// </summary>
         public string Name { get; }
@@ -33,18 +28,13 @@ namespace IronWren.AutoMapper
         /// </summary>
         /// <param name="type">Whether it's a getter or setter property.</param>
         /// <param name="name">The name of the property on the Wren side.</param>
-        /// <param name="argument">The name of the argument for the property on the Wren side. Ignored for getters.</param>
-        public WrenPropertyAttribute(PropertyType type, string name, string argument = "value")
+        public WrenPropertyAttribute(PropertyType type, string name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name may not be null or whitespace!", nameof(name));
 
-            if (string.IsNullOrWhiteSpace(argument))
-                throw new ArgumentException("Argument name may not be null or whitespace!", nameof(argument));
-
             Type = type;
             Name = name;
-            Argument = argument;
         }
     }
 }

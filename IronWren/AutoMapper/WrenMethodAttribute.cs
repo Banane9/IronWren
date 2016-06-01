@@ -9,7 +9,7 @@ namespace IronWren.AutoMapper
     /// <para/>
     /// Must have a single argument of type <see cref="WrenVM"/> and a return type of void.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed class WrenMethodAttribute : Attribute
     {
         /// <summary>
