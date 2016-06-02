@@ -338,6 +338,25 @@ namespace IronWren
         /// It is an error to call this if the slot does not contain an instance of a foreign class.
         /// </summary>
         /// <param name="slot">The slot to read the foreign object from.</param>
+        /// <typeparam name="T">The type of the foreign object.</typeparam>
+        /// <returns>The foreign object.</returns>
+        public T GetSlotForeign<T>(int slot)
+        {
+            var dataPtr = getSlotForeign(vm, slot);
+            var objectId = Marshal.ReadInt32(dataPtr);
+
+            if (!foreignObjects.ContainsKey(objectId))
+                throw new Exception("No foreign object with that Id found!");
+
+            return (T)foreignObjects[objectId];
+        }
+
+        /// <summary>
+        /// Reads a foreign object from the given slot.
+        /// <para/>
+        /// It is an error to call this if the slot does not contain an instance of a foreign class.
+        /// </summary>
+        /// <param name="slot">The slot to read the foreign object from.</param>
         /// <returns>The foreign object.</returns>
         public object GetSlotForeign(int slot)
         {

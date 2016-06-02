@@ -38,7 +38,7 @@ namespace IronWren.AutoMapper
         {
             var classAttribute = type.GetTypeInfo().GetCustomAttribute<WrenClassAttribute>();
 
-            classes.Add(classAttribute?.Name ?? type.Name, new ForeignClass(type.GetTypeInfo()));
+            classes.Add(classAttribute?.Name ?? type.Name, new ForeignClass(type));
         }
 
         public string GetSource()

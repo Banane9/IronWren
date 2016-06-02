@@ -13,8 +13,12 @@ namespace IronWren.AutoMapper
     /// </summary>
     internal sealed class ForeignClass
     {
+        private static readonly ConstantExpression slot = Expression.Constant(0);
+        private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
+
         private readonly ConstructorInfo constructor;
         private readonly Dictionary<string, WrenForeignMethod> functions = new Dictionary<string, WrenForeignMethod>();
+        private readonly MethodCallExpression getSlotForeign;
         private readonly string source;
 
         /// <summary>
@@ -29,15 +33,19 @@ namespace IronWren.AutoMapper
         /// </summary>
         public TypeInfo Target { get; }
 
-        public ForeignClass(TypeInfo target)
+        public ForeignClass(Type target)
         {
-            if (target.IsAbstract && !target.IsSealed)
+            Target = target.GetTypeInfo();
+
+            if (Target.IsAbstract && !Target.IsSealed)
                 throw new ArgumentException("The target type can't be abstract!", nameof(target));
 
-            if (target.IsGenericType && target.GetGenericTypeDefinition() == target.AsType())
+            if (Target.IsGenericType && Target.GetGenericTypeDefinition() == Target.AsType())
                 throw new ArgumentException("The target type can't be an undefined generic!", nameof(target));
 
-            Target = target;
+            getSlotForeign = Expression.Call(vmParam, typeof(WrenVM).GetRuntimeMethod("GetSlotForeign", new[] { typeof(int) })
+                .MakeGenericMethod(target), slot);
+
             Functions = new ReadOnlyDictionary<string, WrenForeignMethod>(functions);
 
             var sourceBuilder = new StringBuilder();
@@ -48,7 +56,7 @@ namespace IronWren.AutoMapper
             constructor = makeConstructors(sourceBuilder);
 
             // Generics?
-            foreach (var method in target.DeclaredMethods.Where(method =>
+            foreach (var method in Target.DeclaredMethods.Where(method =>
                 {
                     if (!method.IsPublic || method.ReturnType != typeof(void))
                         return false;
@@ -130,12 +138,9 @@ namespace IronWren.AutoMapper
             if (method.IsStatic)
                 return (WrenForeignMethod)method.CreateDelegate(typeof(WrenForeignMethod));
 
-            var vmParam = Expression.Parameter(typeof(WrenVM));
-            var getSlotForeign = typeof(WrenVM).GetRuntimeMethod("GetSlotForeign", new[] { typeof(int) });
-
-            // vm => vm.GetSlotForeign(0).[method](vm)
+            // vm => vm.GetSlotForeign<TTarget>(0).[method](vm)
             return Expression.Lambda<WrenForeignMethod>(
-                Expression.Call(Expression.Convert(Expression.Call(vmParam, getSlotForeign, Expression.Constant(0)), Target.AsType()), method, vmParam),
+                Expression.Call(getSlotForeign, method, vmParam),
                 vmParam).Compile();
         }
 

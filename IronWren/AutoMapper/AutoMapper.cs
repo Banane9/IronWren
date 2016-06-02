@@ -75,7 +75,7 @@ namespace IronWren.AutoMapper
 
                 foreach (var target in targets)
                 {
-                    var foreignClass = new ForeignClass(target.GetTypeInfo());
+                    var foreignClass = new ForeignClass(target);
                     var classAttribute = target.GetTypeInfo().GetCustomAttribute<WrenClassAttribute>();
 
                     mainModuleClasses[vm].Add(classAttribute?.Name ?? target.Name, foreignClass);
