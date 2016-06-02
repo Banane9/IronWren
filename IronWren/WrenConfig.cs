@@ -235,7 +235,7 @@ namespace IronWren
             return resultPtr;
         }
 
-        //private static List<WrenForeignMethodInternal> wrappedResults = new List<WrenForeignMethodInternal>();
+        private static List<WrenForeignMethodInternal> wrappedResults = new List<WrenForeignMethodInternal>();
 
         private WrenForeignMethodInternal bindForeignMethod(IntPtr vm, string module, string className, bool isStatic, string signature)
         {
@@ -250,15 +250,15 @@ namespace IronWren
             if (result == null)
                 return null;
 
-            // Possibly have to save the delegate so it isn't GCed
+            // Have to save the delegate so it isn't GCed
             WrenForeignMethodInternal wrappedResult = vmPtr => result(WrenVM.GetVM(vmPtr));
-            //wrappedResults.Add(wrappedResult);
+            wrappedResults.Add(wrappedResult);
 
             return wrappedResult;
         }
 
-        //private static Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal> classMethods =
-        //    new Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal>();
+        private static Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal> classMethods =
+            new Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal>();
 
         private WrenForeignClassMethodsInternal bindForeignClass(IntPtr vm, string module, string className)
         {
@@ -270,9 +270,9 @@ namespace IronWren
                 .Select(bindForeignClass => bindForeignClass(WrenVM.GetVM(vm), module, className))
                 .Single(res => res != null);
 
-            // Possibly have to save struct, so the delegates aren't GCed
+            // Have to save struct, so the delegates aren't GCed
             var methods = new WrenForeignClassMethodsInternal(result);
-            //classMethods.Add(result, methods);
+            classMethods.Add(result, methods);
 
             return methods;
         }

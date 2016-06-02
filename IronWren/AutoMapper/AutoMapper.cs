@@ -136,13 +136,13 @@ namespace IronWren.AutoMapper
                 && mainModuleClasses.ContainsKey(vm)
                 && mainModuleClasses[vm].ContainsKey(className)
                 && mainModuleClasses[vm][className].Functions.ContainsKey(signature))
-                return mainModuleClasses[vm][className].Functions[signature].Invoke;
+                return mainModuleClasses[vm][className].Functions[signature];
 
             if (generatedModules.ContainsKey(vm)
                 && generatedModules[vm].ContainsKey(module)
                 && generatedModules[vm][module].Classes.ContainsKey(className)
                 && generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
-                return generatedModules[vm][module].Classes[className].Functions[signature].Invoke;
+                return generatedModules[vm][module].Classes[className].Functions[signature];
 
             return null;
         }

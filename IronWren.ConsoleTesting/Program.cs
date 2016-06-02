@@ -1,6 +1,7 @@
 ﻿using IronWren.AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace IronWren.ConsoleTesting
@@ -65,6 +66,19 @@ namespace IronWren.ConsoleTesting
                 vm.AutoMap(typeof(WrenMath));
                 vm.Interpret("System.print(\"The sine of pi is: %(Math.sin(Math.pi))!\")");
                 Console.WriteLine($"And C# says it's: {Math.Sin(Math.PI)}");
+
+                Console.WriteLine();
+
+                var sw = new Stopwatch();
+
+                for (var i = 0; i < 10; ++i)
+                {
+                    sw.Restart();
+                    vm.Interpret("for (i in 1..1000000) Math.sin(Math.pi)");
+                    sw.Stop();
+
+                    Console.WriteLine("1000000 iterations took " + sw.ElapsedMilliseconds + "ms.");
+                }
             }
 
             Console.ReadLine();
