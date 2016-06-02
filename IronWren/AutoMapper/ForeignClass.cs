@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -119,16 +120,16 @@ namespace IronWren.AutoMapper
 
         private static WrenForeignMethod getInvoker(MethodInfo method)
         {
-            // TODO: Make this a compiled Expression<WrenForeignMethod>?
-            return (vm) =>
-            {
-                object instance = null;
+            if (method.IsStatic)
+                return (WrenForeignMethod)method.CreateDelegate(typeof(WrenForeignMethod));
 
-                if (!method.IsStatic)
-                    instance = vm.GetSlotForeign(0);
+            var vmParam = Expression.Parameter(typeof(WrenVM));
+            var getSlotForeign = typeof(WrenVM).GetRuntimeMethod("GetSlotForeign", new[] { typeof(int) });
 
-                method.Invoke(instance, new[] { vm });
-            };
+            // vm => vm.GetSlotForeign(0).[method](vm)
+            return Expression.Lambda<WrenForeignMethod>(
+                Expression.Call(Expression.Call(vmParam, getSlotForeign, Expression.Constant(0)), method, vmParam),
+                vmParam).Compile();
         }
 
         private void construct(WrenVM vm)
