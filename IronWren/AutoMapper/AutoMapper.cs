@@ -122,37 +122,23 @@ namespace IronWren.AutoMapper
 
         private static WrenForeignClassMethods bindAutoMapperClass(WrenVM vm, string module, string className)
         {
-            if (!generatedModules.ContainsKey(vm)
-                || !generatedModules[vm].ContainsKey(module)
-                || !generatedModules[vm][module].Classes.ContainsKey(className))
-                return null;
+            if (module == WrenVM.InterpetModule)
+                return mainModuleClasses?[vm]?[className]?.Bind();
 
-            return generatedModules[vm][module].Classes[className].Bind();
+            return generatedModules?[vm]?[module]?.Classes?[className]?.Bind();
         }
 
         private static WrenForeignMethod bindAutoMapperMethod(WrenVM vm, string module, string className, bool isStatic, string signature)
         {
-            if (module == WrenVM.InterpetModule
-                && mainModuleClasses.ContainsKey(vm)
-                && mainModuleClasses[vm].ContainsKey(className)
-                && mainModuleClasses[vm][className].Functions.ContainsKey(signature))
-                return mainModuleClasses[vm][className].Functions[signature];
+            if (module == WrenVM.InterpetModule)
+                return mainModuleClasses?[vm]?[className]?.Functions?[signature];
 
-            if (generatedModules.ContainsKey(vm)
-                && generatedModules[vm].ContainsKey(module)
-                && generatedModules[vm][module].Classes.ContainsKey(className)
-                && generatedModules[vm][module].Classes[className].Functions.ContainsKey(signature))
-                return generatedModules[vm][module].Classes[className].Functions[signature];
-
-            return null;
+            return generatedModules?[vm]?[module]?.Classes?[className]?.Functions?[signature];
         }
 
         private static string loadAutoMapperModule(WrenVM vm, string name)
         {
-            if (!generatedModules.ContainsKey(vm) || !generatedModules[vm].ContainsKey(name))
-                return null;
-
-            return generatedModules[vm][name].GetSource();
+            return generatedModules?[vm]?[name]?.GetSource();
         }
 
         #endregion VM Config Methods

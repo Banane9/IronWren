@@ -96,11 +96,11 @@ namespace IronWren.AutoMapper
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeMethod(method));
                 }
-
-                sourceBuilder.AppendLine("}");
-
-                source = sourceBuilder.ToString();
             }
+
+            sourceBuilder.AppendLine("}");
+
+            source = sourceBuilder.ToString();
         }
 
         public string GetSource()
@@ -118,7 +118,14 @@ namespace IronWren.AutoMapper
             return foreignClassMethods;
         }
 
-        private static WrenForeignMethod getInvoker(MethodInfo method)
+        private void construct(WrenVM vm)
+        {
+            var instance = constructor.Invoke(new[] { vm });
+
+            vm.SetSlotNewForeign(0, instance);
+        }
+
+        private WrenForeignMethod getInvoker(MethodInfo method)
         {
             if (method.IsStatic)
                 return (WrenForeignMethod)method.CreateDelegate(typeof(WrenForeignMethod));
@@ -128,15 +135,8 @@ namespace IronWren.AutoMapper
 
             // vm => vm.GetSlotForeign(0).[method](vm)
             return Expression.Lambda<WrenForeignMethod>(
-                Expression.Call(Expression.Call(vmParam, getSlotForeign, Expression.Constant(0)), method, vmParam),
+                Expression.Call(Expression.Convert(Expression.Call(vmParam, getSlotForeign, Expression.Constant(0)), Target.AsType()), method, vmParam),
                 vmParam).Compile();
-        }
-
-        private void construct(WrenVM vm)
-        {
-            var instance = constructor.Invoke(new[] { vm });
-
-            vm.SetSlotNewForeign(0, instance);
         }
 
         private ConstructorInfo makeConstructors(StringBuilder sourceBuilder)
@@ -148,7 +148,7 @@ namespace IronWren.AutoMapper
 
                 var parameters = ctor.GetParameters();
 
-                return parameters.Length != 1 && parameters[0].ParameterType != typeof(WrenVM);
+                return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
             });
 
             if (constructor != null)
@@ -156,10 +156,10 @@ namespace IronWren.AutoMapper
                 var wrenConstructors = constructor.GetCustomAttributes<WrenConstructorAttribute>().ToArray();
 
                 if (wrenConstructors.Length == 0)
-                    sourceBuilder.AppendLine(Definition.MakeConstructor());
+                    sourceBuilder.AppendLine($"{Definition.MakeConstructor()} {{ }}");
                 else
                     foreach (var wrenConstructor in wrenConstructors)
-                        sourceBuilder.AppendLine(Definition.MakeConstructor(wrenConstructor.Arguments));
+                        sourceBuilder.AppendLine($"{Definition.MakeConstructor(wrenConstructor.Arguments)} {{ }}");
             }
 
             return constructor;

@@ -27,7 +27,8 @@ namespace IronWren.ConsoleTesting
                 Console.WriteLine($"BindForeignMethod called: It's called {signature}, is part of {className} and is {(isStatic ? "static" : "not static")}.");
                 return (signature == "sayHi(_)" ? sayHi : (WrenForeignMethod)null);
             };
-            config.BindForeignClass += (vm, module, className) => new WrenForeignClassMethods { Allocate = alloc };
+
+            config.BindForeignClass += (vm, module, className) => className == "Test" ? new WrenForeignClassMethods { Allocate = alloc } : null;
 
             using (var vm = new WrenVM(config))
             {
@@ -71,7 +72,7 @@ namespace IronWren.ConsoleTesting
 
                 var sw = new Stopwatch();
 
-                for (var i = 0; i < 10; ++i)
+                for (var i = 0; i < 3; ++i)
                 {
                     sw.Restart();
                     vm.Interpret("for (i in 1..1000000) Math.sin(Math.pi)");
@@ -79,6 +80,21 @@ namespace IronWren.ConsoleTesting
 
                     Console.WriteLine("1000000 iterations took " + sw.ElapsedMilliseconds + "ms.");
                 }
+
+                var results = new double[1000000];
+                sw.Restart();
+                for (var i = 0; i < 1000000; ++i)
+                {
+                    results[i] = Math.Sin(Math.PI);
+                }
+                sw.Stop();
+
+                Console.WriteLine("1000000 iterations in C# took " + sw.ElapsedMilliseconds + "ms.");
+
+                vm.AutoMap<WrenVector>();
+                vm.Interpret("var vec = Vector.new(1, 2)");
+                vm.Interpret("System.print(\"Vector's X is: %(vec.x)\")");
+                vm.Interpret("System.print(\"Vector's Y is: %(vec.y)\")");
             }
 
             Console.ReadLine();
