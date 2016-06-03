@@ -17,8 +17,11 @@ namespace IronWren.AutoMapper
         private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
 
         private readonly ConstructorInfo constructor;
+
         private readonly Dictionary<string, WrenForeignMethod> functions = new Dictionary<string, WrenForeignMethod>();
+
         private readonly MethodCallExpression getSlotForeign;
+
         private readonly string source;
 
         /// <summary>
@@ -27,6 +30,11 @@ namespace IronWren.AutoMapper
         /// Includes everything (methods, properties, indexers).
         /// </summary>
         public ReadOnlyDictionary<string, WrenForeignMethod> Functions { get; }
+
+        /// <summary>
+        /// Gets the name of the class on the Wren side.
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Gets the TypeInfo of the Type that this ForeignClass targets.
@@ -51,7 +59,9 @@ namespace IronWren.AutoMapper
             var sourceBuilder = new StringBuilder();
 
             var classAttribute = Target.GetCustomAttribute<WrenClassAttribute>();
-            sourceBuilder.AppendLine($"foreign class {(classAttribute?.Name ?? Target.Name)} {{");
+            Name = classAttribute?.Name ?? Target.Name;
+
+            sourceBuilder.AppendLine($"foreign class {Name} {{");
 
             constructor = makeConstructors(sourceBuilder);
 

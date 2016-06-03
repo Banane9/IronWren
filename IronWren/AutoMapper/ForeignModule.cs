@@ -12,12 +12,9 @@ namespace IronWren.AutoMapper
     /// </summary>
     internal sealed class ForeignModule
     {
-        private Dictionary<string, ForeignClass> classes = new Dictionary<string, ForeignClass>();
+        private readonly Dictionary<string, ForeignClass> classes = new Dictionary<string, ForeignClass>();
 
-        /// <summary>
-        /// Gets the string builder used for building the source code.
-        /// </summary>
-        private StringBuilder Source;
+        private readonly StringBuilder source = new StringBuilder();
 
         /// <summary>
         /// Gets the <see cref="ForeignClass"/>es that are part of the module.
@@ -25,7 +22,7 @@ namespace IronWren.AutoMapper
         public ReadOnlyDictionary<string, ForeignClass> Classes { get; }
 
         /// <summary>
-        /// Gets whether the module was loaded.
+        /// Gets whether the module's source has been used.
         /// </summary>
         public bool Used { get; private set; }
 
@@ -38,24 +35,17 @@ namespace IronWren.AutoMapper
         {
             var classAttribute = type.GetTypeInfo().GetCustomAttribute<WrenClassAttribute>();
 
-            classes.Add(classAttribute?.Name ?? type.Name, new ForeignClass(type));
+            var foreignClass = new ForeignClass(type);
+            classes.Add(foreignClass.Name, foreignClass);
+
+            source.AppendLine(foreignClass.GetSource());
         }
 
         public string GetSource()
         {
-            if (!Used)
-            {
-                var classSources = Classes.Values.Select(foreignClass => foreignClass.GetSource()).ToArray();
+            Used = true;
 
-                Source = new StringBuilder(classSources.Sum(source => source.Length));
-
-                foreach (var classSource in classSources)
-                    Source.AppendLine(classSource);
-
-                Used = true;
-            }
-
-            return Source.ToString();
+            return source.ToString();
         }
     }
 }

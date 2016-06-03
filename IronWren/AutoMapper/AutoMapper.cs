@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace IronWren.AutoMapper
 {
@@ -29,8 +28,8 @@ namespace IronWren.AutoMapper
         public static bool TreatModificationAfterLoadAsError { get; set; } = true;
 
         /// <summary>
-        /// Automatically maps the given type to make its public interface accessible from Wren. Optionally places it into a module
-        /// other than the <see cref="WrenVM.InterpetModule"/>.
+        /// Automatically maps the given type to make its marked interface accessible from Wren.
+        /// Optionally places it into a module other than the <see cref="WrenVM.InterpetModule"/>.
         /// <para/>
         /// If no other module is specified, the generated code will be interpreted immediately.
         /// </summary>
@@ -43,10 +42,8 @@ namespace IronWren.AutoMapper
         }
 
         /// <summary>
-        /// Automatically maps the given types to make their public interfaces accessible from Wren. Optionally places them into a module
-        /// other than the <see cref="WrenVM.InterpetModule"/>.
-        /// <para/>
-        /// The generated code will be interpreted immediately.
+        /// Automatically maps the given types to make their marked interfaces accessible from Wren.
+        /// Places them into the <see cref="WrenVM.InterpetModule"/> as the generated code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="targets">The types to map.</param>
@@ -56,10 +53,8 @@ namespace IronWren.AutoMapper
         }
 
         /// <summary>
-        /// Automatically maps the given types to make their public interfaces accessible from Wren. Optionally places them into a module
-        /// other than the <see cref="WrenVM.InterpetModule"/>.
-        /// <para/>
-        /// If no other module is specified, the generated code will be interpreted immediately.
+        /// Automatically maps the given types to make their marked interfaces accessible from Wren.
+        /// If the module name is the <see cref="WrenVM.InterpetModule"/>, the code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="moduleName">The name of the module to place the types into.</param>
@@ -76,9 +71,8 @@ namespace IronWren.AutoMapper
                 foreach (var target in targets)
                 {
                     var foreignClass = new ForeignClass(target);
-                    var classAttribute = target.GetTypeInfo().GetCustomAttribute<WrenClassAttribute>();
 
-                    mainModuleClasses[vm].Add(classAttribute?.Name ?? target.Name, foreignClass);
+                    mainModuleClasses[vm].Add(foreignClass.Name, foreignClass);
 
                     vm.Interpret(foreignClass.GetSource());
                 }
