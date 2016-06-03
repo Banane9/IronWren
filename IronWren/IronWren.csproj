@@ -53,7 +53,7 @@
     <Compile Include="AutoMapper\AutoMapper.cs" />
     <Compile Include="AutoMapper\Definition.cs" />
     <Compile Include="AutoMapper\ForeignClass.cs" />
-    <Compile Include="AutoMapper\LoadedModuleModifiedException.cs" />
+    <Compile Include="AutoMapper\Exceptions\LoadedModuleModifiedException.cs" />
     <Compile Include="AutoMapper\ForeignModule.cs" />
     <Compile Include="AutoMapper\Signature.cs" />
     <Compile Include="AutoMapper\PropertyType.cs" />
@@ -62,6 +62,7 @@
     <Compile Include="AutoMapper\Attributes\WrenIndexerAttribute.cs" />
     <Compile Include="AutoMapper\Attributes\WrenMethodAttribute.cs" />
     <Compile Include="AutoMapper\Attributes\WrenPropertyAttribute.cs" />
+    <Compile Include="AutoMapper\Exceptions\SignatureExistsException.cs" />
     <Compile Include="Delegates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WrenConfig.cs" />

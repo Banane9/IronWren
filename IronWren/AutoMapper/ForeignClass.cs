@@ -13,6 +13,9 @@ namespace IronWren.AutoMapper
     /// </summary>
     internal sealed class ForeignClass
     {
+        private static readonly MethodInfo genericGetSlotForeign = typeof(WrenVM).GetRuntimeMethods()
+                .Single(method => method.IsPublic && method.Name == "GetSlotForeign" && method.IsGenericMethod);
+
         private static readonly ConstantExpression slot = Expression.Constant(0);
         private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
 
@@ -23,6 +26,8 @@ namespace IronWren.AutoMapper
         private readonly MethodCallExpression getSlotForeign;
 
         private readonly string source;
+
+        private readonly TypeInfo target;
 
         /// <summary>
         /// Gets the <see cref="WrenForeignMethod"/>s that are part of the class.
@@ -36,37 +41,31 @@ namespace IronWren.AutoMapper
         /// </summary>
         public string Name { get; }
 
-        /// <summary>
-        /// Gets the TypeInfo of the Type that this ForeignClass targets.
-        /// </summary>
-        public TypeInfo Target { get; }
-
         public ForeignClass(Type target)
         {
-            Target = target.GetTypeInfo();
+            this.target = target.GetTypeInfo();
 
-            if (Target.IsAbstract && !Target.IsSealed)
+            if (this.target.IsAbstract && !this.target.IsSealed)
                 throw new ArgumentException("The target type can't be abstract!", nameof(target));
 
-            if (Target.IsGenericType && Target.GetGenericTypeDefinition() == Target.AsType())
+            if (this.target.IsGenericType && this.target.GetGenericTypeDefinition() == this.target.AsType())
                 throw new ArgumentException("The target type can't be an undefined generic!", nameof(target));
 
-            getSlotForeign = Expression.Call(vmParam, typeof(WrenVM).GetRuntimeMethod("GetSlotForeign", new[] { typeof(int) })
-                .MakeGenericMethod(target), slot);
+            getSlotForeign = Expression.Call(vmParam, genericGetSlotForeign.MakeGenericMethod(target), slot);
 
             Functions = new ReadOnlyDictionary<string, WrenForeignMethod>(functions);
 
             var sourceBuilder = new StringBuilder();
 
-            var classAttribute = Target.GetCustomAttribute<WrenClassAttribute>();
-            Name = classAttribute?.Name ?? Target.Name;
+            var classAttribute = this.target.GetCustomAttribute<WrenClassAttribute>();
+            Name = classAttribute?.Name ?? this.target.Name;
 
             sourceBuilder.AppendLine($"foreign class {Name} {{");
 
             constructor = makeConstructors(sourceBuilder);
 
             // Generics?
-            foreach (var method in Target.DeclaredMethods.Where(method =>
+            foreach (var method in this.target.DeclaredMethods.Where(method =>
                 {
                     if (!method.IsPublic || method.ReturnType != typeof(void))
                         return false;
@@ -81,7 +80,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeProperty(propertyAttribute.Type, propertyAttribute.Name);
 
                     if (functions.ContainsKey(signature))
-                        throw new Exception("Can't have multiple properties with the same signature!");
+                        throw new SignatureExistsException(signature, target);
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeProperty(method));
@@ -95,7 +94,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeIndexer(indexerAttribute.Type, indexerAttribute.Arguments.Length);
 
                     if (functions.ContainsKey(signature))
-                        throw new Exception("Can't have multiple indexers with the same signature!");
+                        throw new SignatureExistsException(signature, target);
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeIndexer(method));
@@ -109,7 +108,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeMethod(methodAttribute.Name, methodAttribute.Arguments.Length);
 
                     if (functions.ContainsKey(signature))
-                        throw new Exception("Can't have multiple methods with the same signature!");
+                        throw new SignatureExistsException(signature, target);
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeMethod(method));
@@ -156,7 +155,7 @@ namespace IronWren.AutoMapper
 
         private ConstructorInfo makeConstructors(StringBuilder sourceBuilder)
         {
-            var constructor = Target.DeclaredConstructors.SingleOrDefault(ctor =>
+            var constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
             {
                 if (!ctor.IsPublic)
                     return false;
