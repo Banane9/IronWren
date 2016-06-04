@@ -15,23 +15,41 @@ namespace IronWren.AutoMapper
     [AttributeUsage(AttributeTargets.Constructor, Inherited = false, AllowMultiple = true)]
     public sealed class WrenConstructorAttribute : Attribute
     {
+        public const string FieldPrefix = "field:";
+        private const int prefixLength = 6;
+
         private static readonly MethodInfo setSlotNewForeign = typeof(WrenVM).GetTypeInfo().GetDeclaredMethod("SetSlotNewForeign");
 
         private static readonly ConstantExpression slot = Expression.Constant(0);
 
         private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
 
-        /// <summary>
-        /// Gets the default arguments in case no attribute is provided.
-        /// <para/>
-        /// Constructor without arguments.
-        /// </summary>
-        public static string[] DefaultArguments { get; } = new string[0];
+        private string code;
 
         /// <summary>
         /// Gets the named arguments for the constructor on the Wren side.
         /// </summary>
         public string[] Arguments { get; }
+
+        /// <summary>
+        /// Sets the Wren code of the constructor which must include the neccessary new lines (\n).
+        /// <para/>
+        /// The code can also be stored in a field if the name of the field is prefixed
+        /// with the <see cref="FieldPrefix"/> ("field:").
+        /// </summary>
+        public string Code
+        {
+            set { code = value; }
+            get { throw new NotSupportedException(); }
+        }
+
+        /// <summary>
+        /// Gets whether the constructor has any Wren code associated with it.
+        /// </summary>
+        public bool HasCode
+        {
+            get { return code != null; }
+        }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenConstructorAttribute"/> class
@@ -75,6 +93,14 @@ namespace IronWren.AutoMapper
             return Expression.Lambda<WrenForeignMethod>(
                 Expression.Call(vmParam, setSlotNewForeign, slot, Expression.New(constructor.Info, vmParam)),
                 vmParam).Compile();
+        }
+
+        internal string GetCode(Type type)
+        {
+            if (!code.StartsWith(FieldPrefix))
+                return code;
+
+            return (string)type.GetTypeInfo().GetDeclaredField(code.Substring(prefixLength)).GetValue(null);
         }
 
         internal sealed class ConstructorDetails

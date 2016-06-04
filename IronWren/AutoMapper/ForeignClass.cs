@@ -118,7 +118,8 @@ namespace IronWren.AutoMapper
                 return;
 
             foreach (var constructorAttribute in constructor.Attributes)
-                sourceBuilder.AppendLine($"{Definition.MakeConstructor(constructorAttribute.Arguments)} {{ }}");
+                sourceBuilder.AppendLine($@"{Definition.MakeConstructor(constructorAttribute.Arguments)} {{{(
+                    constructorAttribute.HasCode ? $"\n{constructorAttribute.GetCode(target.AsType())}\n" : " ")}}}");
         }
 
         private void makeIndexers(StringBuilder sourceBuilder)
