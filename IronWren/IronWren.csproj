@@ -50,8 +50,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoMapper\Attributes\WrenFinalizerAttribute.cs" />
     <Compile Include="AutoMapper\AutoMapper.cs" />
     <Compile Include="AutoMapper\Definition.cs" />
+    <Compile Include="AutoMapper\Exceptions\InvalidSignatureException.cs" />
     <Compile Include="AutoMapper\ForeignClass.cs" />
     <Compile Include="AutoMapper\Exceptions\LoadedModuleModifiedException.cs" />
     <Compile Include="AutoMapper\ForeignModule.cs" />

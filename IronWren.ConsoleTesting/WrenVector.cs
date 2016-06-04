@@ -41,5 +41,11 @@ namespace IronWren.ConsoleTesting
         {
             y = vm.GetSlotDouble(1);
         }
+
+        [WrenFinalizer]
+        private void wrenFinalize()
+        {
+            Console.WriteLine($"Vector ({x}, {y}) finalized!");
+        }
     }
 }

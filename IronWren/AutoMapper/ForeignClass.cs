@@ -13,13 +13,16 @@ namespace IronWren.AutoMapper
     /// </summary>
     internal sealed class ForeignClass
     {
-        private static readonly MethodInfo genericGetSlotForeign = typeof(WrenVM).GetRuntimeMethods()
-                .Single(method => method.IsPublic && method.Name == "GetSlotForeign" && method.IsGenericMethod);
+        private static readonly ParameterExpression finalizerObjParam = Expression.Parameter(typeof(object));
+
+        private static readonly MethodInfo genericGetSlotForeign = typeof(WrenVM).GetTypeInfo()
+                    .GetDeclaredMethods("GetSlotForeign").Single(method => method.IsGenericMethod);
 
         private static readonly ConstantExpression slot = Expression.Constant(0);
         private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
 
         private readonly ConstructorInfo constructor;
+        private readonly WrenFinalizer finalize;
 
         private readonly Dictionary<string, WrenForeignMethod> functions = new Dictionary<string, WrenForeignMethod>();
 
@@ -63,6 +66,7 @@ namespace IronWren.AutoMapper
             sourceBuilder.AppendLine($"foreign class {Name} {{");
 
             constructor = makeConstructors(sourceBuilder);
+            finalize = makeFinalize();
 
             // Generics?
             foreach (var method in this.target.DeclaredMethods.Where(method =>
@@ -127,12 +131,11 @@ namespace IronWren.AutoMapper
 
         internal WrenForeignClassMethods Bind()
         {
-            var foreignClassMethods = new WrenForeignClassMethods();
-
-            foreignClassMethods.Allocate = construct;
-            // TODO: Finalizer?
-
-            return foreignClassMethods;
+            return new WrenForeignClassMethods
+            {
+                Allocate = construct,
+                Finalize = finalize
+            };
         }
 
         private void construct(WrenVM vm)
@@ -177,6 +180,23 @@ namespace IronWren.AutoMapper
             }
 
             return constructor;
+        }
+
+        private WrenFinalizer makeFinalize()
+        {
+            var finalizeMethod = target.AsType().GetRuntimeMethods()
+                .SingleOrDefault(method => method.GetCustomAttribute<WrenFinalizerAttribute>() != null);
+
+            if (finalizeMethod == null)
+                return null;
+
+            if (finalizeMethod.ReturnType != typeof(void) || finalizeMethod.GetParameters().Length != 0)
+                throw new InvalidSignatureException(finalizeMethod.Name, target.AsType(), typeof(WrenFinalizerAttribute));
+
+            // finalizeObj => ((TTarget)finalizeObj).[finalize]()
+            return Expression.Lambda<WrenFinalizer>(
+                Expression.Call(Expression.Convert(finalizerObjParam, target.AsType()), finalizeMethod),
+                finalizerObjParam).Compile();
         }
     }
 }
