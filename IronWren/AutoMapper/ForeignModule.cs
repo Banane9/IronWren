@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace IronWren.AutoMapper
@@ -33,8 +32,6 @@ namespace IronWren.AutoMapper
 
         public void Add(Type type)
         {
-            var classAttribute = type.GetTypeInfo().GetCustomAttribute<WrenClassAttribute>();
-
             var foreignClass = new ForeignClass(type);
             classes.Add(foreignClass.Name, foreignClass);
 

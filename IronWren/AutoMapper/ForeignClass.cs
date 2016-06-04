@@ -13,16 +13,13 @@ namespace IronWren.AutoMapper
     /// </summary>
     internal sealed class ForeignClass
     {
-        private static readonly ParameterExpression finalizerObjParam = Expression.Parameter(typeof(object));
-
         private static readonly MethodInfo genericGetSlotForeign = typeof(WrenVM).GetTypeInfo()
                     .GetDeclaredMethods("GetSlotForeign").Single(method => method.IsGenericMethod);
 
         private static readonly ConstantExpression slot = Expression.Constant(0);
         private static readonly ParameterExpression vmParam = Expression.Parameter(typeof(WrenVM));
 
-        private readonly ConstructorInfo constructor;
-        private readonly WrenFinalizer finalize;
+        private readonly WrenForeignClassMethods classMethods;
 
         private readonly Dictionary<string, WrenForeignMethod> functions = new Dictionary<string, WrenForeignMethod>();
 
@@ -58,25 +55,45 @@ namespace IronWren.AutoMapper
 
             Functions = new ReadOnlyDictionary<string, WrenForeignMethod>(functions);
 
-            var sourceBuilder = new StringBuilder();
-
             var classAttribute = this.target.GetCustomAttribute<WrenClassAttribute>();
             Name = classAttribute?.Name ?? this.target.Name;
 
+            classMethods = new WrenForeignClassMethods
+            {
+                Allocate = WrenConstructorAttribute.MakeAllocator(target),
+                Finalize = WrenFinalizerAttribute.MakeFinalizer(target)
+            };
+
+            source = generateSource();
+        }
+
+        public string GetSource()
+        {
+            return source;
+        }
+
+        internal WrenForeignClassMethods Bind()
+        {
+            return classMethods;
+        }
+
+        private string generateSource()
+        {
+            var sourceBuilder = new StringBuilder();
+
             sourceBuilder.AppendLine($"foreign class {Name} {{");
 
-            constructor = makeConstructors(sourceBuilder);
-            finalize = makeFinalize();
+            makeConstructors(sourceBuilder);
 
             // Generics?
-            foreach (var method in this.target.DeclaredMethods.Where(method =>
-                {
-                    if (!method.IsPublic || method.ReturnType != typeof(void))
-                        return false;
+            foreach (var method in target.DeclaredMethods.Where(method =>
+            {
+                if (!method.IsPublic || method.ReturnType != typeof(void))
+                    return false;
 
-                    var parameters = method.GetParameters();
-                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
-                }))
+                var parameters = method.GetParameters();
+                return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
+            }))
             {
                 var propertyAttribute = method.GetCustomAttribute<WrenPropertyAttribute>();
                 if (propertyAttribute != null)
@@ -84,7 +101,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeProperty(propertyAttribute.Type, propertyAttribute.Name);
 
                     if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target);
+                        throw new SignatureExistsException(signature, target.AsType());
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeProperty(method));
@@ -98,7 +115,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeIndexer(indexerAttribute.Type, indexerAttribute.Arguments.Length);
 
                     if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target);
+                        throw new SignatureExistsException(signature, target.AsType());
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeIndexer(method));
@@ -112,7 +129,7 @@ namespace IronWren.AutoMapper
                     var signature = Signature.MakeMethod(methodAttribute.Name, methodAttribute.Arguments.Length);
 
                     if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target);
+                        throw new SignatureExistsException(signature, target.AsType());
 
                     functions.Add(signature, getInvoker(method));
                     sourceBuilder.AppendLine(Definition.MakeMethod(method));
@@ -121,28 +138,7 @@ namespace IronWren.AutoMapper
 
             sourceBuilder.AppendLine("}");
 
-            source = sourceBuilder.ToString();
-        }
-
-        public string GetSource()
-        {
-            return source;
-        }
-
-        internal WrenForeignClassMethods Bind()
-        {
-            return new WrenForeignClassMethods
-            {
-                Allocate = construct,
-                Finalize = finalize
-            };
-        }
-
-        private void construct(WrenVM vm)
-        {
-            var instance = constructor.Invoke(new[] { vm });
-
-            vm.SetSlotNewForeign(0, instance);
+            return sourceBuilder.ToString();
         }
 
         private WrenForeignMethod getInvoker(MethodInfo method)
@@ -156,47 +152,15 @@ namespace IronWren.AutoMapper
                 vmParam).Compile();
         }
 
-        private ConstructorInfo makeConstructors(StringBuilder sourceBuilder)
+        private void makeConstructors(StringBuilder sourceBuilder)
         {
-            var constructor = target.DeclaredConstructors.SingleOrDefault(ctor =>
-            {
-                if (!ctor.IsPublic)
-                    return false;
+            var constructor = WrenConstructorAttribute.GetConstructorDetails(target.AsType());
 
-                var parameters = ctor.GetParameters();
+            if (constructor == null)
+                return;
 
-                return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
-            });
-
-            if (constructor != null)
-            {
-                var wrenConstructors = constructor.GetCustomAttributes<WrenConstructorAttribute>().ToArray();
-
-                if (wrenConstructors.Length == 0)
-                    sourceBuilder.AppendLine($"{Definition.MakeConstructor()} {{ }}");
-                else
-                    foreach (var wrenConstructor in wrenConstructors)
-                        sourceBuilder.AppendLine($"{Definition.MakeConstructor(wrenConstructor.Arguments)} {{ }}");
-            }
-
-            return constructor;
-        }
-
-        private WrenFinalizer makeFinalize()
-        {
-            var finalizeMethod = target.AsType().GetRuntimeMethods()
-                .SingleOrDefault(method => method.GetCustomAttribute<WrenFinalizerAttribute>() != null);
-
-            if (finalizeMethod == null)
-                return null;
-
-            if (finalizeMethod.ReturnType != typeof(void) || finalizeMethod.GetParameters().Length != 0)
-                throw new InvalidSignatureException(finalizeMethod.Name, target.AsType(), typeof(WrenFinalizerAttribute));
-
-            // finalizeObj => ((TTarget)finalizeObj).[finalize]()
-            return Expression.Lambda<WrenFinalizer>(
-                Expression.Call(Expression.Convert(finalizerObjParam, target.AsType()), finalizeMethod),
-                finalizerObjParam).Compile();
+            foreach (var constructorAttribute in constructor.Attributes)
+                sourceBuilder.AppendLine($"{Definition.MakeConstructor(constructorAttribute.Arguments)} {{ }}");
         }
     }
 }

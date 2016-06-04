@@ -11,12 +11,16 @@ namespace IronWren.ConsoleTesting
         private double x;
         private double y;
 
+        public WrenVector(double x, double y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
         [WrenConstructor("x", "y")]
         public WrenVector(WrenVM vm)
-        {
-            x = vm.GetSlotDouble(1);
-            y = vm.GetSlotDouble(2);
-        }
+            : this(vm.GetSlotDouble(1), vm.GetSlotDouble(2))
+        { }
 
         [WrenProperty(PropertyType.Get, "x")]
         public void GetX(WrenVM vm)
