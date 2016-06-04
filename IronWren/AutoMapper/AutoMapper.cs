@@ -74,7 +74,7 @@ namespace IronWren.AutoMapper
 
                     mainModuleClasses[vm].Add(foreignClass.Name, foreignClass);
 
-                    vm.Interpret(foreignClass.GetSource());
+                    vm.Interpret(foreignClass.Source);
                 }
 
                 return;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace IronWren.AutoMapper
 {
@@ -35,6 +36,30 @@ namespace IronWren.AutoMapper
 
             Type = type;
             Name = name;
+        }
+
+        internal static IEnumerable<MethodDetails<WrenPropertyAttribute>> GetMethodDetails(Type type)
+        {
+            var methods = type.GetTypeInfo().DeclaredMethods
+                .Select(func => new MethodDetails<WrenPropertyAttribute>(func, func.GetCustomAttribute<WrenPropertyAttribute>()))
+                .Where(ctor => ctor.Attribute != null).ToArray();
+
+            var aggregateException = new AggregateException(validateMethods(methods));
+            if (aggregateException.InnerExceptions.Count > 0)
+                throw aggregateException;
+
+            return methods;
+        }
+
+        private static IEnumerable<SignatureInvalidException> validateMethods(IEnumerable<MethodDetails<WrenPropertyAttribute>> methods)
+        {
+            foreach (var method in methods)
+            {
+                var parameters = method.Info.GetParameters();
+
+                if (parameters.Length != 1 || parameters[0].ParameterType != typeof(WrenVM) || method.Info.ReturnType != typeof(void))
+                    yield return new SignatureInvalidException(method.Info.Name, method.Info.DeclaringType, typeof(WrenConstructorAttribute));
+            }
         }
     }
 }

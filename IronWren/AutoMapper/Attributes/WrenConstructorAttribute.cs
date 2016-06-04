@@ -50,9 +50,18 @@ namespace IronWren.AutoMapper
 
         internal static ConstructorDetails GetConstructorDetails(Type type)
         {
-            return type.GetTypeInfo().DeclaredConstructors
+            var constructor = type.GetTypeInfo().DeclaredConstructors
                 .Select(ctor => new ConstructorDetails(ctor, ctor.GetCustomAttributes<WrenConstructorAttribute>().ToArray()))
                 .SingleOrDefault(ctor => ctor.Attributes.Length > 0);
+
+            if (constructor == null)
+                return null;
+
+            var parameters = constructor.Info.GetParameters();
+            if (parameters.Length != 1 || parameters[0].ParameterType != typeof(WrenVM))
+                throw new SignatureInvalidException(constructor.Info.Name, type, typeof(WrenConstructorAttribute));
+
+            return constructor;
         }
 
         internal static WrenForeignMethod MakeAllocator(Type type)
@@ -62,17 +71,13 @@ namespace IronWren.AutoMapper
             if (constructor == null)
                 return null;
 
-            var parameters = constructor.Info.GetParameters();
-            if (parameters.Length != 1 || parameters[0].ParameterType != typeof(WrenVM))
-                throw new SignatureInvalidException(constructor.Info.Name, type, typeof(WrenConstructorAttribute));
-
             // vm => vm.SetSlotNewForeign(0, new [TTarget](vm));
             return Expression.Lambda<WrenForeignMethod>(
                 Expression.Call(vmParam, setSlotNewForeign, slot, Expression.New(constructor.Info, vmParam)),
                 vmParam).Compile();
         }
 
-        internal class ConstructorDetails
+        internal sealed class ConstructorDetails
         {
             public WrenConstructorAttribute[] Attributes { get; }
             public ConstructorInfo Info { get; }

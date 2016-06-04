@@ -35,7 +35,7 @@ namespace IronWren.AutoMapper
             var foreignClass = new ForeignClass(type);
             classes.Add(foreignClass.Name, foreignClass);
 
-            source.AppendLine(foreignClass.GetSource());
+            source.AppendLine(foreignClass.Source);
         }
 
         public string GetSource()

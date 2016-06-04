@@ -25,8 +25,6 @@ namespace IronWren.AutoMapper
 
         private readonly MethodCallExpression getSlotForeign;
 
-        private readonly string source;
-
         private readonly TypeInfo target;
 
         /// <summary>
@@ -40,6 +38,11 @@ namespace IronWren.AutoMapper
         /// Gets the name of the class on the Wren side.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Gets the Wren source code for the foreign class.
+        /// </summary>
+        public string Source { get; }
 
         public ForeignClass(Type target)
         {
@@ -64,17 +67,20 @@ namespace IronWren.AutoMapper
                 Finalize = WrenFinalizerAttribute.MakeFinalizer(target)
             };
 
-            source = generateSource();
-        }
-
-        public string GetSource()
-        {
-            return source;
+            Source = generateSource();
         }
 
         internal WrenForeignClassMethods Bind()
         {
             return classMethods;
+        }
+
+        private void addSignature(string signature, MethodInfo method)
+        {
+            if (functions.ContainsKey(signature))
+                throw new SignatureExistsException(signature, target.AsType());
+
+            functions.Add(signature, getInvoker(method));
         }
 
         private string generateSource()
@@ -84,57 +90,9 @@ namespace IronWren.AutoMapper
             sourceBuilder.AppendLine($"foreign class {Name} {{");
 
             makeConstructors(sourceBuilder);
-
-            // Generics?
-            foreach (var method in target.DeclaredMethods.Where(method =>
-            {
-                if (!method.IsPublic || method.ReturnType != typeof(void))
-                    return false;
-
-                var parameters = method.GetParameters();
-                return parameters.Length == 1 && parameters[0].ParameterType == typeof(WrenVM);
-            }))
-            {
-                var propertyAttribute = method.GetCustomAttribute<WrenPropertyAttribute>();
-                if (propertyAttribute != null)
-                {
-                    var signature = Signature.MakeProperty(propertyAttribute.Type, propertyAttribute.Name);
-
-                    if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target.AsType());
-
-                    functions.Add(signature, getInvoker(method));
-                    sourceBuilder.AppendLine(Definition.MakeProperty(method));
-
-                    continue;
-                }
-
-                var indexerAttribute = method.GetCustomAttribute<WrenIndexerAttribute>();
-                if (indexerAttribute != null)
-                {
-                    var signature = Signature.MakeIndexer(indexerAttribute.Type, indexerAttribute.Arguments.Length);
-
-                    if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target.AsType());
-
-                    functions.Add(signature, getInvoker(method));
-                    sourceBuilder.AppendLine(Definition.MakeIndexer(method));
-
-                    continue;
-                }
-
-                var methodAttributes = method.GetCustomAttributes<WrenMethodAttribute>();
-                foreach (var methodAttribute in methodAttributes)
-                {
-                    var signature = Signature.MakeMethod(methodAttribute.Name, methodAttribute.Arguments.Length);
-
-                    if (functions.ContainsKey(signature))
-                        throw new SignatureExistsException(signature, target.AsType());
-
-                    functions.Add(signature, getInvoker(method));
-                    sourceBuilder.AppendLine(Definition.MakeMethod(method));
-                }
-            }
+            makeProperties(sourceBuilder);
+            makeIndexers(sourceBuilder);
+            makeMethods(sourceBuilder);
 
             sourceBuilder.AppendLine("}");
 
@@ -161,6 +119,39 @@ namespace IronWren.AutoMapper
 
             foreach (var constructorAttribute in constructor.Attributes)
                 sourceBuilder.AppendLine($"{Definition.MakeConstructor(constructorAttribute.Arguments)} {{ }}");
+        }
+
+        private void makeIndexers(StringBuilder sourceBuilder)
+        {
+            foreach (var method in WrenIndexerAttribute.GetMethodDetails(target.AsType()))
+            {
+                var signature = Signature.MakeIndexer(method.Attribute.Type, method.Attribute.Arguments.Length);
+                addSignature(signature, method.Info);
+
+                sourceBuilder.AppendLine(Definition.MakeIndexer(method.Info));
+            }
+        }
+
+        private void makeMethods(StringBuilder sourceBuilder)
+        {
+            foreach (var method in WrenMethodAttribute.GetMethodDetails(target.AsType()))
+            {
+                var signature = Signature.MakeMethod(method.Attribute.Name, method.Attribute.Arguments.Length);
+                addSignature(signature, method.Info);
+
+                sourceBuilder.AppendLine(Definition.MakeMethod(method.Info));
+            }
+        }
+
+        private void makeProperties(StringBuilder sourceBuilder)
+        {
+            foreach (var method in WrenPropertyAttribute.GetMethodDetails(target.AsType()))
+            {
+                var signature = Signature.MakeProperty(method.Attribute.Type, method.Attribute.Name);
+                addSignature(signature, method.Info);
+
+                sourceBuilder.AppendLine(Definition.MakeProperty(method.Info));
+            }
         }
     }
 }
