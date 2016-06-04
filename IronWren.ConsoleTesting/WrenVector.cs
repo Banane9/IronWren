@@ -10,6 +10,9 @@ namespace IronWren.ConsoleTesting
     {
         private static readonly string constructorCode = "this.x = x";
 
+        [WrenCode]
+        private static readonly string print = "print() {\nSystem.print(\"Vector (%(x), %(y))\")\n}";
+
         private double x;
         private double y;
 

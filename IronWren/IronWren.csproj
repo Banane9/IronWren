@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoMapper\Attributes\MethodDetails.cs" />
+    <Compile Include="AutoMapper\Attributes\WrenCodeAttribute.cs" />
     <Compile Include="AutoMapper\Attributes\WrenFinalizerAttribute.cs" />
     <Compile Include="AutoMapper\AutoMapper.cs" />
     <Compile Include="AutoMapper\Definition.cs" />

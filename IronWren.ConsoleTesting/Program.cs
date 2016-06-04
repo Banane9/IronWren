@@ -93,6 +93,7 @@ namespace IronWren.ConsoleTesting
 
                 vm.AutoMap<WrenVector>();
                 vm.Interpret("var vec = Vector.new(1, 2)");
+                vm.Interpret("vec.print()");
                 vm.Interpret("System.print(\"Vector's X is: %(vec.x)\")");
                 vm.Interpret("System.print(\"Vector's Y is: %(vec.y)\")");
             }

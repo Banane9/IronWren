@@ -94,6 +94,9 @@ namespace IronWren.AutoMapper
             makeIndexers(sourceBuilder);
             makeMethods(sourceBuilder);
 
+            foreach (var field in WrenCodeAttribute.GetFields(target.AsType()))
+                sourceBuilder.AppendLine((string)field.GetValue(null));
+
             sourceBuilder.AppendLine("}");
 
             return sourceBuilder.ToString();
