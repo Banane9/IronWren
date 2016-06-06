@@ -5,7 +5,7 @@ using System.Linq;
 namespace IronWren.AutoMapper
 {
     /// <summary>
-    /// Contains extension methods for the <see cref="WrenVM"/> class to automatically map C# classes to Wren.
+    /// Contains extension methods for the <see cref="WrenVM"/> class to automatically map attribute-decorated C# classes to Wren.
     /// </summary>
     public static class AutoMapper
     {
@@ -21,7 +21,7 @@ namespace IronWren.AutoMapper
             new Dictionary<WrenVM, Dictionary<string, ForeignClass>>();
 
         /// <summary>
-        /// Gets or sets whether a module getting modified after being loaded throws an Exception.
+        /// Gets or sets whether a module getting modified after being loaded throws a <see cref="LoadedModuleModifiedException"/>.
         /// <para/>
         /// On by default.
         /// </summary>
