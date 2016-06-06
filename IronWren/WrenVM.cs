@@ -211,35 +211,35 @@ namespace IronWren
         /// Creates a handle for the value stored in the given slot.
         /// <para/>
         /// This will prevent the object that is referred to from being garbage collected
-        /// until the handle is released by calling <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/>.
+        /// until the handle is released by calling <see cref="ReleaseValue(WrenValueHandle)"/>.
         /// </summary>
         /// <param name="slot">The slot containing the value to create a handle for.</param>
         /// <returns>A handle to the value in the slot.</returns>
-        public WrenValueHandle GetSlotValue(int slot)
+        public WrenValueHandle GetSlotHandle(int slot)
         {
-            return (WrenValueHandle)getSlotValue(vm, slot);
+            return (WrenValueHandle)getSlotHandle(vm, slot);
         }
 
         /// <summary>
         /// Stores the value captured by the given value handle in the given slot.
         /// <para/>
-        /// This does not release the handle for the value. You must call <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/> to do so.
+        /// This does not release the handle for the value. You must call <see cref="ReleaseValue(WrenValueHandle)"/> to do so.
         /// </summary>
         /// <param name="slot">The slot to write the value captured by the value handle to.</param>
-        /// <param name="value">The value handle.</param>
-        public void SetSlotValue(int slot, WrenValueHandle value)
+        /// <param name="handle">The value handle.</param>
+        public void SetSlotHandle(int slot, WrenValueHandle handle)
         {
-            setSlotValue(vm, slot, value);
+            setSlotHandle(vm, slot, handle);
         }
 
         /// <summary>
         /// Releases the reference stored in the given value.
         /// After calling this, the value handle can no longer be used.
         /// </summary>
-        /// <param name="value">The value handle to release.</param>
-        public void ReleaseValue(WrenValueHandle value)
+        /// <param name="handle">The value handle to release.</param>
+        public void ReleaseValue(WrenValueHandle handle)
         {
-            releaseValue(vm, value);
+            releaseValue(vm, handle);
         }
 
         #endregion Value
@@ -500,14 +500,14 @@ namespace IronWren
 
         #region Value
 
-        [DllImport(wren, EntryPoint = "wrenGetSlotValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotValue(IntPtr vm, int slot);
+        [DllImport(wren, EntryPoint = "wrenGetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr getSlotHandle(IntPtr vm, int slot);
 
-        [DllImport(wren, EntryPoint = "wrenSetSlotValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotValue(IntPtr vm, int slot, IntPtr value);
+        [DllImport(wren, EntryPoint = "wrenSetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void setSlotHandle(IntPtr vm, int slot, IntPtr handle);
 
         [DllImport(wren, EntryPoint = "wrenReleaseValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void releaseValue(IntPtr vm, IntPtr value);
+        private static extern void releaseValue(IntPtr vm, IntPtr handle);
 
         #endregion Value
 

@@ -5,8 +5,8 @@ namespace IronWren
     /// <summary>
     /// Represents a handle to a value in the WrenVM.
     /// <para/>
-    /// Used by <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/>, <see cref="WrenVM.SetSlotValue(int, WrenValueHandle)"/>
-    /// and gotten from <see cref="WrenVM.GetSlotValue(int)"/>.
+    /// Used by <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/>, <see cref="WrenVM.SetSlotHandle(int, WrenValueHandle)"/>
+    /// and gotten from <see cref="WrenVM.GetSlotHandle(int)"/>.
     /// </summary>
     public struct WrenValueHandle
     {
