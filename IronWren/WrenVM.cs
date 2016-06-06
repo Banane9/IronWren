@@ -107,7 +107,7 @@ namespace IronWren
         /// This handle can be used repeatedly to directly invoke that method from
         /// code using <see cref="Call(WrenFunctionHandle)"/>.
         /// <para/>
-        /// When you are done with this handle, it must be released using <see cref="ReleaseValue(WrenFunctionHandle)"/>.
+        /// When you are done with this handle, it must be released using <see cref="ReleaseHandle(WrenFunctionHandle)"/>.
         /// </summary>
         /// <param name="signature">
         /// The signature of the method. It has to include the braces and an underscore for each argument.

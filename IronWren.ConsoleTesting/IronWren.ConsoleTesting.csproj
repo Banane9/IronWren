@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IronWren, Version=1.0.6001.37398, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IronWren.1.0.0\lib\net45\IronWren.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -50,12 +54,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronWren\IronWren.csproj">
-      <Project>{1c2a5c32-a9ea-47dd-974d-c75ba5c06dc1}</Project>
-      <Name>IronWren</Name>
-    </ProjectReference>
+    <Content Include="Native\wren.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Native\wren.pdb" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

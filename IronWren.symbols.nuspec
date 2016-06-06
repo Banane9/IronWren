@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>IronWren</id>
+        <version>1.0.0</version>
+        <title>IronWren</title>
+        <authors>Banane9</authors>
+        <owners>Banane9</owners>
+        <licenseUrl>https://github.com/Banane9/IronWren/blob/master/LICENSE</licenseUrl>
+        <projectUrl>http://github.com/Banane9/IronWren</projectUrl>
+        <iconUrl>http://banane9.github.io/favicon.ico</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>.NET integration for the scripting language Wren created by munificent.
+
+http://wren.io
+https://github.com/munificent/wren
+
+Supports the whole VM API and also generating Wren foreign-classes for C# classes.</description>
+        <summary>.NET integration for the scripting language Wren.</summary>
+        <releaseNotes>First release.</releaseNotes>
+        <copyright>Banane9</copyright>
+        <language>en</language>
+        <tags>wren, integration, script, scripting, language, pcl, portable, library, wrapper, game</tags>
+    </metadata>
+    <files>
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoAndroid\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoAndroid\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoMac\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoMac\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoTouch\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoTouch\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\net45\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\net45\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\netcore451\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\netcore451\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\wpa81\Native\wren.dll" />
+        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\wpa81\Native\wren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoAndroid\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\MonoAndroid\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoAndroid\IronWren.xml" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoMac\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\MonoMac\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoMac\IronWren.xml" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoTouch\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\MonoTouch\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoTouch\IronWren.xml" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\net45\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\net45\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\net45\IronWren.xml" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\netcore451\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\netcore451\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\netcore451\IronWren.xml" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\wpa81\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.pdb" target="lib\wpa81\IronWren.pdb" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\wpa81\IronWren.xml" />
+        <file src="IronWren\AutoMapper\Attributes\MethodDetails.cs" target="src\AutoMapper\Attributes\MethodDetails.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenClassAttribute.cs" target="src\AutoMapper\Attributes\WrenClassAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenCodeAttribute.cs" target="src\AutoMapper\Attributes\WrenCodeAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenConstructorAttribute.cs" target="src\AutoMapper\Attributes\WrenConstructorAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenFinalizerAttribute.cs" target="src\AutoMapper\Attributes\WrenFinalizerAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenIndexerAttribute.cs" target="src\AutoMapper\Attributes\WrenIndexerAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenMethodAttribute.cs" target="src\AutoMapper\Attributes\WrenMethodAttribute.cs" />
+        <file src="IronWren\AutoMapper\Attributes\WrenPropertyAttribute.cs" target="src\AutoMapper\Attributes\WrenPropertyAttribute.cs" />
+        <file src="IronWren\AutoMapper\Exceptions\LoadedModuleModifiedException.cs" target="src\AutoMapper\Exceptions\LoadedModuleModifiedException.cs" />
+        <file src="IronWren\AutoMapper\Exceptions\SignatureExistsException.cs" target="src\AutoMapper\Exceptions\SignatureExistsException.cs" />
+        <file src="IronWren\AutoMapper\Exceptions\SignatureInvalidException.cs" target="src\AutoMapper\Exceptions\SignatureInvalidException.cs" />
+        <file src="IronWren\AutoMapper\AutoMapper.cs" target="src\AutoMapper\AutoMapper.cs" />
+        <file src="IronWren\AutoMapper\Definition.cs" target="src\AutoMapper\Definition.cs" />
+        <file src="IronWren\AutoMapper\ForeignClass.cs" target="src\AutoMapper\ForeignClass.cs" />
+        <file src="IronWren\AutoMapper\ForeignModule.cs" target="src\AutoMapper\ForeignModule.cs" />
+        <file src="IronWren\AutoMapper\PropertyType.cs" target="src\AutoMapper\PropertyType.cs" />
+        <file src="IronWren\AutoMapper\Signature.cs" target="src\AutoMapper\Signature.cs" />
+        <file src="IronWren\Native\wren-debug.dll" target="src\Native\wren-debug.dll" />
+        <file src="IronWren\Native\wren-debug.pdb" target="src\Native\wren-debug.pdb" />
+        <file src="IronWren\Native\wren.dll" target="src\Native\wren.dll" />
+        <file src="IronWren\Native\wren.pdb" target="src\Native\wren.pdb" />
+        <file src="IronWren\Properties\AssemblyInfo.cs" target="src\Properties\AssemblyInfo.cs" />
+        <file src="IronWren\Delegates.cs" target="src\Delegates.cs" />
+        <file src="IronWren\WrenConfig.cs" target="src\WrenConfig.cs" />
+        <file src="IronWren\WrenErrorType.cs" target="src\WrenErrorType.cs" />
+        <file src="IronWren\WrenForeignClassMethods.cs" target="src\WrenForeignClassMethods.cs" />
+        <file src="IronWren\WrenFunctionHandle.cs" target="src\WrenFunctionHandle.cs" />
+        <file src="IronWren\WrenInterpretResult.cs" target="src\WrenInterpretResult.cs" />
+        <file src="IronWren\WrenType.cs" target="src\WrenType.cs" />
+        <file src="IronWren\WrenValueHandle.cs" target="src\WrenValueHandle.cs" />
+        <file src="IronWren\WrenVM.cs" target="src\WrenVM.cs" />
+    </files>
+</package>
