@@ -3,28 +3,18 @@
 namespace IronWren
 {
     /// <summary>
-    /// Represents a handle to a value in the WrenVM.
+    /// Represents a handle to a value in the <see cref="WrenVM"/>.
     /// <para/>
     /// Used by <see cref="WrenVM.ReleaseValue(WrenValueHandle)"/>, <see cref="WrenVM.SetSlotHandle(int, WrenValueHandle)"/>
     /// and gotten from <see cref="WrenVM.GetSlotHandle(int)"/>.
     /// </summary>
     public struct WrenValueHandle
     {
-        private readonly IntPtr valuePtr;
+        internal IntPtr HandlePtr { get; }
 
-        public WrenValueHandle(IntPtr valuePtr)
+        internal WrenValueHandle(IntPtr handlePtr)
         {
-            this.valuePtr = valuePtr;
-        }
-
-        public static explicit operator WrenValueHandle(IntPtr valuePtr)
-        {
-            return new WrenValueHandle(valuePtr);
-        }
-
-        public static implicit operator IntPtr(WrenValueHandle value)
-        {
-            return value.valuePtr;
+            HandlePtr = handlePtr;
         }
     }
 }

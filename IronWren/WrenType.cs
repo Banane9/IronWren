@@ -7,11 +7,34 @@
     /// </summary>
     public enum WrenType
     {
+        /// <summary>
+        /// A boolean.
+        /// </summary>
         Bool,
+
+        /// <summary>
+        /// A number (double).
+        /// </summary>
         Number,
+
+        /// <summary>
+        /// An instance of a foreign class.
+        /// </summary>
         Foreign,
+
+        /// <summary>
+        /// A list.
+        /// </summary>
         List,
+
+        /// <summary>
+        /// No value.
+        /// </summary>
         Null,
+
+        /// <summary>
+        /// A string or byte array.
+        /// </summary>
         String,
 
         /// <summary>

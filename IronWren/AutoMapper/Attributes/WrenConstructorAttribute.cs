@@ -15,7 +15,11 @@ namespace IronWren.AutoMapper
     [AttributeUsage(AttributeTargets.Constructor, Inherited = false, AllowMultiple = true)]
     public sealed class WrenConstructorAttribute : Attribute
     {
+        /// <summary>
+        /// Gets the prefix used to designate that the constructor's code is stored in the given field.
+        /// </summary>
         public const string FieldPrefix = "field:";
+
         private const int prefixLength = 6;
 
         private static readonly MethodInfo setSlotNewForeign = typeof(WrenVM).GetTypeInfo().GetDeclaredMethod("SetSlotNewForeign");

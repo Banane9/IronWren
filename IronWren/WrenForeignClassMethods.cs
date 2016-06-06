@@ -34,13 +34,13 @@ namespace IronWren
         /// <summary>
         /// The callback invoked when the foreign object is created.
         /// <para/>
-        /// This must be provided. Inside the body of this, it must call
-        /// <see cref="WrenVM.SetSlotNewForeign(int, int, uint)"/> exactly once.
+        /// This must be provided, except if the class will never be created.
+        /// Inside the body of this, it must call <see cref="WrenVM.SetSlotNewForeign(int, object)"/> exactly once.
         /// </summary>
         public WrenForeignMethod Allocate { get; set; }
 
         /// <summary>
-        /// The callback invoked when the garbage collector is about to collect a foreign object's memory.
+        /// The callback invoked when the garbage collector is about to collect a foreign object.
         /// <para/>
         /// Only the object is provided, as the method may not interact with the VM.
         /// <para/>

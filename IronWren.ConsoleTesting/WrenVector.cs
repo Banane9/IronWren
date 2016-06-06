@@ -8,10 +8,10 @@ namespace IronWren.ConsoleTesting
     [WrenClass("Vector")]
     public sealed class WrenVector
     {
-        private static readonly string constructorCode = "this.x = x";
+        private const string constructorCode = "this.x = x";
 
         [WrenCode]
-        private static readonly string print = "print() {\nSystem.print(\"Vector (%(x), %(y))\")\n}";
+        private const string print = "print() {\nSystem.print(\"Vector (%(x), %(y))\")\n}";
 
         private double x;
         private double y;

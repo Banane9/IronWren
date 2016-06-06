@@ -112,6 +112,21 @@ namespace IronWren
 
     #endregion WrenLoadModule
 
+    /// <summary>
+    /// Called to report an error to the user.
+    /// <para/>
+    /// An error detected during compile time is reported by calling this once with <see cref="WrenErrorType.Compile"/>,
+    /// the name of the module and line where the error occurs, and the compiler's error message.
+    /// <para/>
+    /// A runtime error is reported by calling this once with <see cref="WrenErrorType.Runtime"/>,
+    /// no module or line, and the runtime error's message.
+    /// After that, a series of <see cref="WrenErrorType.StackTrace"/> calls are made for each line in the stack trace.
+    /// Each of those has the module and line where the method or function is defined and [message] is the name of the method or function.
+    /// </summary>
+    /// <param name="type">The type of error being reported.</param>
+    /// <param name="module">The name of the module that the error occured in.</param>
+    /// <param name="line">The line number of the error. Negative (-1) if not applicable.</param>
+    /// <param name="message">The error's message.</param>
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void WrenError(WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
 

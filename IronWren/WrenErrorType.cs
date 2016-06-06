@@ -1,14 +1,23 @@
 ﻿namespace IronWren
 {
+    /// <summary>
+    /// Lists the possible errors reported by the <see cref="WrenVM"/>.
+    /// </summary>
     public enum WrenErrorType
     {
-        // A syntax or resolution error detected at compile time.
+        /// <summary>
+        /// A syntax or resolution error detected at compile time.
+        /// </summary>
         Compile,
 
-        // The error message for a runtime error.
+        /// <summary>
+        /// The error message for a runtime error.
+        /// </summary>
         Runtime,
 
-        // One entry of a runtime error's stack trace.
+        /// <summary>
+        /// One entry of a runtime error's stack trace.
+        /// </summary>
         StackTrace
     }
 }

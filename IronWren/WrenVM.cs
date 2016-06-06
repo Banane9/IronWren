@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace IronWren
 {
     /// <summary>
-    /// Represents an instance of the VM running Wren.
+    /// Represents an instance of a VM running Wren.
     /// </summary>
     public class WrenVM : IDisposable
     {
@@ -114,7 +114,7 @@ namespace IronWren
         /// <returns>A handle to the function.</returns>
         public WrenFunctionHandle MakeCallHandle(string signature)
         {
-            return (WrenFunctionHandle)makeCallHandle(vm, signature);
+            return new WrenFunctionHandle(makeCallHandle(vm, signature));
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace IronWren
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Call(WrenFunctionHandle handle)
         {
-            return call(vm, handle);
+            return call(vm, handle.HandlePtr);
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace IronWren
         /// <param name="handle">The function handle to release.</param>
         public void ReleaseValue(WrenFunctionHandle handle)
         {
-            releaseValue(vm, handle);
+            releaseValue(vm, handle.HandlePtr);
         }
 
         #endregion Function Interactions
@@ -217,7 +217,7 @@ namespace IronWren
         /// <returns>A handle to the value in the slot.</returns>
         public WrenValueHandle GetSlotHandle(int slot)
         {
-            return (WrenValueHandle)getSlotHandle(vm, slot);
+            return new WrenValueHandle(getSlotHandle(vm, slot));
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace IronWren
         /// <param name="handle">The value handle.</param>
         public void SetSlotHandle(int slot, WrenValueHandle handle)
         {
-            setSlotHandle(vm, slot, handle);
+            setSlotHandle(vm, slot, handle.HandlePtr);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace IronWren
         /// <param name="handle">The value handle to release.</param>
         public void ReleaseValue(WrenValueHandle handle)
         {
-            releaseValue(vm, handle);
+            releaseValue(vm, handle.HandlePtr);
         }
 
         #endregion Value
@@ -422,10 +422,9 @@ namespace IronWren
         /// <summary>
         /// Stores the given string in the given slot.
         /// <para/>
-        /// The text is copied to a new string within Wren's heap, so you can free
-        /// memory used by it after this is called. The length is calculated using
-        /// strlen(). If the string may contain any null bytes in the middle, then you
-        /// should use <see cref="SetSlotBytes()"/> instead.
+        /// The text is copied to a new string within Wren's heap, so you can free memory used by it after this is called.
+        /// The length is calculated using strlen(). If the string may contain any null bytes in the middle,
+        /// then you should use <see cref="SetSlotBytes(int, byte[])"/> instead.
         /// </summary>
         /// <param name="slot">The slot to write the string to.</param>
         /// <param name="text">The string to write to the slot.</param>
@@ -559,6 +558,7 @@ namespace IronWren
         /// <para/>
         /// Returns a pointer to the foreign object's data.
         /// </summary>
+        /// <param name="vm">The vm.</param>
         /// <param name="slot">The slot to create the new instance of the foreign class in.</param>
         /// <param name="classSlot"></param>
         /// <param name="size">The size of data in bytes.</param>
