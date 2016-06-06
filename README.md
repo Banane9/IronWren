@@ -3,6 +3,8 @@ IronWren
 
 .NET integration for the scripting language [Wren](https://github.com/munificent/wren).
 
+Available on NuGet [here](https://www.nuget.org/packages/IronWren/)!
+
 ###Features###
 
 - [x] C# style wrapper around Wren's C-API.
