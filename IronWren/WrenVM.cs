@@ -373,7 +373,7 @@ namespace IronWren
             var objectId = Marshal.ReadInt32(dataPtr);
 
             if (!foreignObjects.ContainsKey(objectId))
-                throw new Exception("No foreign object with that Id found!");
+                throw new KeyNotFoundException("No foreign object with that Id found!");
 
             return foreignObjects[objectId];
         }
@@ -398,7 +398,7 @@ namespace IronWren
             var objectId = Marshal.ReadInt32(dataPtr);
 
             if (!foreignObjects.ContainsKey(objectId))
-                throw new Exception("No foreign object with that Id found!");
+                throw new KeyNotFoundException("No foreign object with that Id found!");
 
             var foreignObject = foreignObjects[objectId];
 

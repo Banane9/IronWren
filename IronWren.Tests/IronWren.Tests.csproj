@@ -50,6 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Mapper.cs" />
     <Compile Include="Functions.cs" />
     <Compile Include="Slots.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

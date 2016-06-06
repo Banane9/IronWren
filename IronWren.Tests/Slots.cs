@@ -4,7 +4,7 @@ using System;
 namespace IronWren.Tests
 {
     [TestClass]
-    public class Slots
+    public sealed class Slots
     {
         private readonly WrenVM vm;
 
