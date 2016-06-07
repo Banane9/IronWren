@@ -3,18 +3,12 @@
 namespace IronWren
 {
     /// <summary>
-    /// Represents a handle to a value in the <see cref="WrenVM"/>.
-    /// <para/>
-    /// Used by <see cref="WrenVM.ReleaseHandle(WrenValueHandle)"/>, <see cref="WrenVM.SetSlotHandle(int, WrenValueHandle)"/>
-    /// and gotten from <see cref="WrenVM.GetSlotHandle(int)"/>.
+    /// Represents a handle to a value in the <see cref="WrenVM"/>. As long as this exists, the value won't be garbage collected.
     /// </summary>
-    public struct WrenValueHandle
+    public sealed class WrenValueHandle : WrenHandle
     {
-        internal IntPtr HandlePtr { get; }
-
-        internal WrenValueHandle(IntPtr handlePtr)
-        {
-            HandlePtr = handlePtr;
-        }
+        internal WrenValueHandle(WrenVM vm, IntPtr handlePtr)
+            : base(vm, handlePtr)
+        { }
     }
 }

@@ -10,11 +10,8 @@ namespace IronWren
     /// </summary>
     public class WrenConfig
     {
-        // Also stops CodeMaid from reorganizing the file
+        // Stop CodeMaid from reorganizing the file
 #if DEBUG
-        private const string wren = "Native/wren-debug";
-#else
-        private const string wren = "Native/wren";
 #endif
 
         internal Config config;
@@ -266,9 +263,10 @@ namespace IronWren
                 return new WrenForeignClassMethodsInternal();
 
             // Only one of the multiple possible BindForeignClass implementations must actually return the ForeignClassMethods
-            var result = BindForeignClass.GetInvocationList().Cast<WrenBindForeignClass>()
-                .Select(bindForeignClass => bindForeignClass(WrenVM.GetVM(vm), module, className))
-                .Single(res => res != null);
+            var results = BindForeignClass.GetInvocationList().Cast<WrenBindForeignClass>()
+                .Select(bindForeignClass => bindForeignClass(WrenVM.GetVM(vm), module, className));
+
+            var result = results.Single(res => res != null);
 
             // Have to save struct, so the delegates aren't GCed
             var methods = new WrenForeignClassMethodsInternal(result);
@@ -293,7 +291,7 @@ namespace IronWren
             Error(type, module, line, message);
         }
 
-        [DllImport(wren, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(WrenVM.WrenLib, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
         private static extern void initConfiguration([Out]out Config config);
     }
 }

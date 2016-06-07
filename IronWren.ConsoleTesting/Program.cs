@@ -96,9 +96,10 @@ namespace IronWren.ConsoleTesting
                 vm.Interpret("vec.print()");
                 vm.Interpret("System.print(\"Vector's X is: %(vec.x)\")");
                 vm.Interpret("System.print(\"Vector's Y is: %(vec.y)\")");
-            }
 
-            Console.ReadLine();
+                while (true)
+                    vm.Interpret(Console.ReadLine());
+            }
         }
 
         private static void sayHi(WrenVM vm)

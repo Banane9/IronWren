@@ -73,6 +73,7 @@
     <Compile Include="WrenErrorType.cs" />
     <Compile Include="WrenForeignClassMethods.cs" />
     <Compile Include="WrenFunctionHandle.cs" />
+    <Compile Include="WrenHandle.cs" />
     <Compile Include="WrenInterpretResult.cs" />
     <Compile Include="WrenType.cs" />
     <Compile Include="WrenValueHandle.cs" />

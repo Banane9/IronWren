@@ -42,13 +42,6 @@ namespace IronWren.Tests
             Assert.AreEqual(WrenType.String, vm.GetSlotType(0));
         }
 
-        [TestCleanup]
-        public void Cleanup()
-        {
-            vm.CollectGarbage();
-            vm.Dispose();
-        }
-
         [TestMethod]
         public void Count()
         {
@@ -83,6 +76,24 @@ namespace IronWren.Tests
         }
 
         [TestMethod]
+        public void Handle()
+        {
+            vm.EnsureSlots(2);
+            vm.SetSlotNull(0, 1);
+
+            Assert.AreEqual(WrenType.Null, vm.GetSlotType(0));
+
+            vm.SetSlotDouble(0, 9);
+
+            var handle = vm.GetSlotHandle(0);
+            vm.SetSlotHandle(1, handle);
+
+            Assert.AreEqual(9, vm.GetSlotDouble(1));
+
+            handle.Release();
+        }
+
+        [TestMethod]
         public void List()
         {
             vm.EnsureSlots(2);
@@ -107,24 +118,6 @@ namespace IronWren.Tests
             Assert.AreEqual("wren", vm.GetSlotString(0));
 
             Assert.AreEqual(WrenType.String, vm.GetSlotType(0));
-        }
-
-        [TestMethod]
-        public void Value()
-        {
-            vm.EnsureSlots(2);
-            vm.SetSlotNull(0, 1);
-
-            Assert.AreEqual(WrenType.Null, vm.GetSlotType(0));
-
-            vm.SetSlotDouble(0, 9);
-
-            var handle = vm.GetSlotHandle(0);
-            vm.SetSlotHandle(1, handle);
-
-            Assert.AreEqual(9, vm.GetSlotDouble(1));
-
-            vm.ReleaseHandle(handle);
         }
     }
 }

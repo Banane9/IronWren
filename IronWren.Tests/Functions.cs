@@ -15,6 +15,7 @@ namespace IronWren.Tests
         {
             vm = new WrenVM();
             vm.Config.Write += (vm, text) => output.Add(text);
+            vm.Config.Error += (type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
         }
 
         [TestMethod]
@@ -34,7 +35,7 @@ namespace IronWren.Tests
 
             Assert.AreEqual("testing!", output[0]);
 
-            vm.ReleaseHandle(fnHandle);
+            fnHandle.Release();
         }
 
         [TestMethod]
@@ -53,7 +54,7 @@ namespace IronWren.Tests
 
             Assert.AreEqual("test called!", output[0]);
 
-            vm.ReleaseHandle(fnHandle);
+            fnHandle.Release();
         }
     }
 }
