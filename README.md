@@ -1,5 +1,5 @@
-IronWren ![Build Status](https://ci.appveyor.com/api/projects/status/github/Banane9/IronWren?branch=master&svg=true)
-========
+IronWren [![Build status](https://ci.appveyor.com/api/projects/status/ue8l1ieifes4xkwq/branch/master?svg=true)](https://ci.appveyor.com/project/Banane9/ironwren/branch/master)
+=========================
 
 .NET integration for the scripting language [Wren](https://github.com/munificent/wren).
 
