@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace IronWren.ConsoleTesting
@@ -97,8 +98,21 @@ namespace IronWren.ConsoleTesting
                 vm.Interpret("System.print(\"Vector's X is: %(vec.x)\")");
                 vm.Interpret("System.print(\"Vector's Y is: %(vec.y)\")");
 
+                Console.ReadLine();
+                Console.Clear();
+                Console.WriteLine("You may now write Wren code that will be interpreted!");
+                Console.WriteLine("Use file:[path] to interpret a file!");
+                Console.WriteLine();
+
                 while (true)
-                    vm.Interpret(Console.ReadLine());
+                {
+                    var input = Console.ReadLine();
+
+                    if (input.StartsWith("file:"))
+                        vm.Interpret(File.ReadAllText(input.Substring(5)));
+                    else
+                        vm.Interpret(input);
+                }
             }
         }
 
