@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>IronWren</id>
-        <version>1.0.0</version>
+        <version>2.0.0</version>
         <title>IronWren</title>
         <authors>Banane9</authors>
         <owners>Banane9</owners>
@@ -15,37 +15,18 @@
 http://wren.io
 https://github.com/munificent/wren
 
-Supports the whole VM API and also generating Wren foreign-classes for C# classes.</description>
+Supports the whole VM API and also generating Wren foreign-classes for C# classes.
+
+The Native folder content has to be set to copy manually.</description>
         <summary>.NET integration for the scripting language Wren.</summary>
-        <releaseNotes>First release.</releaseNotes>
+        <releaseNotes>WrenVM instances will not be kept alive anymore after the user code doesn't have any more references to it.</releaseNotes>
         <copyright>Banane9</copyright>
         <language>en</language>
         <tags>wren, integration, script, scripting, language, pcl, portable, library, wrapper, game</tags>
     </metadata>
     <files>
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoAndroid\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoAndroid\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoMac\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoMac\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\MonoTouch\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\MonoTouch\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\net45\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\net45\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\netcore451\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\netcore451\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\wpa81\Native\wren.dll" />
-        <file src="IronWren\bin\Release\Native\wren.pdb" target="content\wpa81\Native\wren.pdb" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoAndroid\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoAndroid\IronWren.xml" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoMac\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoMac\IronWren.xml" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\MonoTouch\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\MonoTouch\IronWren.xml" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\net45\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\net45\IronWren.xml" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\netcore451\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\netcore451\IronWren.xml" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\wpa81\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\wpa81\IronWren.xml" />
+        <file src="IronWren\bin\Release\Native\wren.dll" target="content\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\Native\wren.dll" />
+        <file src="IronWren\bin\Release\IronWren.dll" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.dll" />
+        <file src="IronWren\bin\Release\IronWren.xml" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.xml" />
     </files>
 </package>
