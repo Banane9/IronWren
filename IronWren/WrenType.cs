@@ -28,6 +28,11 @@
         List,
 
         /// <summary>
+        /// A map.
+        /// </summary>
+        Map,
+
+        /// <summary>
         /// No value.
         /// </summary>
         Null,

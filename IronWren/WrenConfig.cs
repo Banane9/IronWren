@@ -177,6 +177,8 @@ namespace IronWren
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenReallocate Reallocate;
 
+            public IntPtr resolveModuleFn;
+
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenLoadModuleInternal LoadModule;
 
@@ -190,13 +192,15 @@ namespace IronWren
             public WrenWriteInternal Write;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenError Error;
+            public WrenErrorInternal Error;
 
             public uint InitialHeapSize;
 
             public uint MinHeapSize;
 
             public int HeapGrowthPercent;
+
+            public IntPtr userData;
         }
 
         /// <summary>
@@ -213,23 +217,25 @@ namespace IronWren
             config.Error = error;
         }
 
-        private IntPtr loadModule(IntPtr vm, string name)
+        private WrenLoadModuleResultInternal loadModule(IntPtr vm, string name)
         {
+            WrenLoadModuleResultInternal result = default;
+
             if (LoadModule == null)
-                return IntPtr.Zero;
+                return result;
 
             // Only one of the multiple possible LoadModule implementations must actually return the source for the module
-            var result = LoadModule.GetInvocationList().Cast<WrenLoadModule>()
+            var externalResult = LoadModule.GetInvocationList().Cast<WrenLoadModule>()
                 .Select(loadModule => loadModule(WrenVM.GetVM(vm), name))
-                .Single(res => res != null);
+                .FirstOrDefault(res => res != null && res.Source != null);
 
-            if (result == null)
-                return IntPtr.Zero;
+            if (externalResult == null)
+                return result;
 
             // Possibly have to free this again
-            var resultPtr = Marshal.StringToCoTaskMemAnsi(result);
+            result.source = externalResult.Source;
 
-            return resultPtr;
+            return result;
         }
 
         private static List<WrenForeignMethodInternal> wrappedResults = new List<WrenForeignMethodInternal>();
@@ -283,12 +289,12 @@ namespace IronWren
             Write(WrenVM.GetVM(vm), text);
         }
 
-        private void error(WrenErrorType type, string module, int line, string message)
+        private void error(IntPtr vm, WrenErrorType type, string module, int line, string message)
         {
             if (Error == null)
                 return;
 
-            Error(type, module, line, message);
+            Error(WrenVM.GetVM(vm), type, module, line, message);
         }
 
         [DllImport(WrenVM.WrenLib, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]

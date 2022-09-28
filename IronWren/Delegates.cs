@@ -105,10 +105,10 @@ namespace IronWren
     /// <param name="vm">The instance of the VM that is calling the method.</param>
     /// <param name="name">The name of the module to load.</param>
     /// <returns>The source code of the module.</returns>
-    public delegate string WrenLoadModule(WrenVM vm, string name);
+    public delegate WrenLoadModuleResult WrenLoadModule(WrenVM vm, string name);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate IntPtr WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
+    internal delegate WrenLoadModuleResultInternal WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
 
     #endregion WrenLoadModule
 
@@ -127,11 +127,13 @@ namespace IronWren
     /// <param name="module">The name of the module that the error occured in.</param>
     /// <param name="line">The line number of the error. Negative (-1) if not applicable.</param>
     /// <param name="message">The error's message.</param>
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void WrenError(WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
+    public delegate void WrenError(WrenVM vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate IntPtr WrenReallocate(IntPtr memory, uint size);
+    internal delegate void WrenErrorInternal(IntPtr vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)] string module, int line, [MarshalAs(UnmanagedType.LPStr)] string message);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate IntPtr WrenReallocate(IntPtr memory, uint size, IntPtr userData);
 
     #region WrenWrite
 

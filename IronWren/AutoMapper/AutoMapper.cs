@@ -30,32 +30,32 @@ namespace IronWren.AutoMapper
 
         /// <summary>
         /// Automatically maps the given type to make its marked interface accessible from Wren.
-        /// Optionally places it into a module other than the <see cref="WrenVM.InterpetModule"/>.
+        /// Optionally places it into a module other than the <see cref="WrenVM.MainModule"/>.
         /// <para/>
         /// If no other module is specified, the generated code will be interpreted immediately.
         /// </summary>
         /// <typeparam name="TTarget">The type to map.</typeparam>
         /// <param name="vm">The <see cref="WrenVM"/> to make the type available to.</param>
         /// <param name="moduleName">The name of the module to place the type into.</param>
-        public static void AutoMap<TTarget>(this WrenVM vm, string moduleName = WrenVM.InterpetModule)
+        public static void AutoMap<TTarget>(this WrenVM vm, string moduleName = WrenVM.MainModule)
         {
             vm.AutoMap(moduleName, typeof(TTarget));
         }
 
         /// <summary>
         /// Automatically maps the given types to make their marked interfaces accessible from Wren.
-        /// Places them into the <see cref="WrenVM.InterpetModule"/> as the generated code will be interpreted immediately.
+        /// Places them into the <see cref="WrenVM.MainModule"/> as the generated code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="targets">The types to map.</param>
         public static void AutoMap(this WrenVM vm, params Type[] targets)
         {
-            vm.AutoMap(WrenVM.InterpetModule, targets);
+            vm.AutoMap(WrenVM.MainModule, targets);
         }
 
         /// <summary>
         /// Automatically maps the given types to make their marked interfaces accessible from Wren.
-        /// If the module name is the <see cref="WrenVM.InterpetModule"/>, the code will be interpreted immediately.
+        /// If the module name is the <see cref="WrenVM.MainModule"/>, the code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="moduleName">The name of the module to place the types into.</param>
@@ -64,7 +64,7 @@ namespace IronWren.AutoMapper
         {
             checkInitialization(vm);
 
-            if (moduleName == WrenVM.InterpetModule)
+            if (moduleName == WrenVM.MainModule)
             {
                 var classes = mainModuleClasses.GetValue(vm, _ => null);
 
@@ -74,7 +74,7 @@ namespace IronWren.AutoMapper
 
                     classes.Add(foreignClass.Name, foreignClass);
 
-                    vm.Interpret(foreignClass.Source);
+                    vm.Interpret(moduleName, foreignClass.Source);
                 }
 
                 return;
@@ -119,7 +119,7 @@ namespace IronWren.AutoMapper
         private static WrenForeignClassMethods bindAutoMapperClass(WrenVM vm, string module, string className)
         {
             Dictionary<string, ForeignClass> classes;
-            if (module == WrenVM.InterpetModule && mainModuleClasses.TryGetValue(vm, out classes))
+            if (module == WrenVM.MainModule && mainModuleClasses.TryGetValue(vm, out classes))
                 return classes?[className]?.Bind();
 
             Dictionary<string, ForeignModule> modules;
@@ -132,7 +132,7 @@ namespace IronWren.AutoMapper
         private static WrenForeignMethod bindAutoMapperMethod(WrenVM vm, string module, string className, bool isStatic, string signature)
         {
             Dictionary<string, ForeignClass> classes;
-            if (module == WrenVM.InterpetModule && mainModuleClasses.TryGetValue(vm, out classes))
+            if (module == WrenVM.MainModule && mainModuleClasses.TryGetValue(vm, out classes))
                 return classes?[className]?.Functions?[signature];
 
             Dictionary<string, ForeignModule> modules;
@@ -142,11 +142,11 @@ namespace IronWren.AutoMapper
             return null;
         }
 
-        private static string loadAutoMapperModule(WrenVM vm, string name)
+        private static WrenLoadModuleResult loadAutoMapperModule(WrenVM vm, string name)
         {
             Dictionary<string, ForeignModule> modules;
             if (generatedModules.TryGetValue(vm, out modules))
-                return modules?[name]?.GetSource();
+                return new WrenLoadModuleResult { Source = modules?[name]?.GetSource() };
 
             return null;
         }

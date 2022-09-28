@@ -19,9 +19,9 @@ namespace IronWren.ConsoleTesting
         {
             var config = new WrenConfig();
             config.Write += (vm, text) => Console.Write(text);
-            config.Error += (type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
+            config.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
 
-            config.LoadModule += (vm, module) => $"System.print(\"Module [{module}] loaded!\")";
+            config.LoadModule += (vm, module) => new WrenLoadModuleResult { Source = $"System.print(\"Module [{module}] loaded!\")" };
 
             config.BindForeignMethod += (vm, module, className, isStatic, signature) =>
             {
@@ -44,7 +44,7 @@ namespace IronWren.ConsoleTesting
                 var someFnHandle = vm.MakeCallHandle("call(_)");
 
                 vm.EnsureSlots(2);
-                vm.GetVariable(WrenVM.InterpetModule, "helloTo", 0);
+                vm.GetVariable(WrenVM.MainModule, "helloTo", 0);
                 vm.SetSlotString(1, "foreign method");
                 result = vm.Call(someFnHandle);
 
@@ -59,7 +59,7 @@ namespace IronWren.ConsoleTesting
                     "import \"TestModule\"\n");
 
                 vm.EnsureSlots(1);
-                vm.GetVariable(WrenVM.InterpetModule, "test", 0);
+                vm.GetVariable(WrenVM.MainModule, "test", 0);
                 result = vm.Call(vm.MakeCallHandle("isForeign"));
                 var isTestClassForeign = vm.GetSlotBool(0);
 

@@ -105,6 +105,23 @@
         }
 
         [TestMethod]
+        public void Map()
+        {
+            vm.EnsureSlots(4);
+            vm.SetSlotNull(0, 1, 2, 3);
+
+            vm.SetSlotNewMap(0);
+            Assert.AreEqual(WrenType.Map, vm.GetSlotType(0));
+
+            vm.SetSlotString(1, "key");
+            vm.SetSlotString(2, "value");
+            vm.SetMapValue(0, 1, 2);
+
+            vm.GetMapValue(0, 1, 3);
+            Assert.AreEqual("value", vm.GetSlotString(3));
+        }
+
+        [TestMethod]
         public void String()
         {
             vm.EnsureSlots(1);

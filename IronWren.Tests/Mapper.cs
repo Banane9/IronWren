@@ -13,7 +13,7 @@ namespace IronWren.Tests
         {
             vm = new WrenVM();
             vm.Config.Write += (vm, text) => output.Add(text);
-            vm.Config.Error += (type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
+            vm.Config.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
         }
 
         [TestMethod]
@@ -30,7 +30,7 @@ namespace IronWren.Tests
 
             Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret("var length = Vector.getLength(Vector.new(0, 2))"));
             vm.EnsureSlots(1);
-            vm.GetVariable(WrenVM.InterpetModule, "length", 0);
+            vm.GetVariable(WrenVM.MainModule, "length", 0);
             Assert.AreEqual(2, vm.GetSlotDouble(0));
         }
 
@@ -39,12 +39,12 @@ namespace IronWren.Tests
         {
             vm.AutoMap("math", typeof(WrenMath));
 
-            Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret("var length = 1\n" + // this shouldn't be needed
+            Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret(
                 "import \"math\" for Math\n" +
                 "var sin = Math.sin(Math.pi)\n"));
 
             vm.EnsureSlots(1);
-            vm.GetVariable(WrenVM.InterpetModule, "sin", 0);
+            vm.GetVariable(WrenVM.MainModule, "sin", 0);
 
             Assert.AreEqual(Math.Sin(Math.PI), vm.GetSlotDouble(0), 1e-6);
         }
