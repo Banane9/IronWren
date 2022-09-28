@@ -110,6 +110,21 @@ namespace IronWren
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate WrenLoadModuleResultInternal WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
 
+    /// <summary>
+    /// Gives the host a chance to canonicalize the imported module name,
+    /// potentially taking into account the (previously resolved) name of the module
+    /// that contains the import. Typically, this is used to implement relative
+    /// imports.
+    /// </summary>
+    /// <param name="vm">The instance of the VM that is calling the method.</param>
+    /// <param name="importer">The name of the module that the import is occurring within.</param>
+    /// <param name="name">The name of the module that is being imported</param>
+    /// <returns>The resolved module name that will be passed to <see cref="WrenLoadModule"/></returns>
+    public delegate string WrenResolveModule(WrenVM vm, string importer, string name);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate IntPtr WrenResolveModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string importer, [MarshalAs(UnmanagedType.LPStr)] string name);
+
     #endregion WrenLoadModule
 
     /// <summary>

@@ -32,6 +32,16 @@ namespace IronWren
         }
 
         /// <summary>
+        /// The callback Wren uses to resolve a module.
+        /// <para/>
+        /// Gives the host a chance to canonicalize the imported module name,
+        /// potentially taking into account the (previously resolved) name of the module
+        /// that contains the import. Typically, this is used to implement relative
+        /// imports.
+        /// </summary>
+        public WrenResolveModule ResolveModule { get; set; }
+
+        /// <summary>
         /// The callback Wren uses to load a module.
         /// <para/>
         /// Since Wren does not talk directly to the file system, it relies on the
@@ -177,7 +187,8 @@ namespace IronWren
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenReallocate Reallocate;
 
-            public IntPtr resolveModuleFn;
+            [MarshalAs(UnmanagedType.FunctionPtr)]
+            public WrenResolveModuleInternal ResolveModule;
 
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenLoadModuleInternal LoadModule;
@@ -210,11 +221,33 @@ namespace IronWren
         {
             initConfiguration(out config);
 
+            config.ResolveModule = resolveModule;
             config.LoadModule = loadModule;
             config.BindForeignMethod = bindForeignMethod;
             config.BindForeignClass = bindForeignClass;
             config.Write = write;
             config.Error = error;
+        }
+
+        private IntPtr resolveModule(IntPtr vm, string importer, string name)
+        {
+            // if there is no ResolveModule implemented, return the input
+            string result = name;
+
+            if (ResolveModule != null)
+            {
+                var resolveResult = ResolveModule.GetInvocationList().Cast<WrenResolveModule>()
+                    .Select(resolveModule => resolveModule(WrenVM.GetVM(vm), importer, name))
+                    .FirstOrDefault(res => res != null);
+
+                if (resolveResult != null)
+                {
+                    result = resolveResult;
+                }
+            }
+
+            IntPtr resultPtr = Marshal.StringToCoTaskMemAnsi(name);
+            return resultPtr;
         }
 
         private WrenLoadModuleResultInternal loadModule(IntPtr vm, string name)
