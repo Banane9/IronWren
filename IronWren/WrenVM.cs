@@ -196,6 +196,29 @@ namespace IronWren
         }
 
         /// <summary>
+        /// Looks up the top level variable with <paramref name="name"/> in resolved <paramref name="module"/>, 
+        /// returns false if not found. The module must be imported at the time, 
+        /// use wrenHasModule to ensure that before calling.
+        /// </summary>
+        /// <param name="module">The module to look for the variable in.</param>
+        /// <param name="name">The name of the variable to look for.</param>
+        /// <returns>True if a variable with the name is resolved in the module.</returns>
+        public bool HasVariable(string module, string name)
+        {
+            return hasVariable(vm, module, name);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="module"/> has been imported/resolved before, false if not.
+        /// </summary>
+        /// <param name="module">The module to check for.</param>
+        /// <returns>True if the module has been imported/resolved before, false if not.</returns>
+        public bool HasModule(string module)
+        {
+            return hasModule(vm, module);
+        }
+
+        /// <summary>
         /// Looks up the top level variable with the given name in the given module and stores it in the given slot.
         /// </summary>
         /// <param name="module">The module that the variable is in.</param>
@@ -204,6 +227,16 @@ namespace IronWren
         public void GetVariable(string module, string name, int slot)
         {
             getVariable(vm, module, name, slot);
+        }
+
+        /// <summary>
+        /// Sets the current fiber to be aborted, and uses the value in <paramref name="slot"/> as the
+        /// runtime error object.
+        /// </summary>
+        /// <param name="slot">The slot containing runtime error object.</param>
+        public void AbortFiber(int slot)
+        {
+            abortFiber(vm, slot);
         }
 
         /// <summary>
@@ -522,6 +555,16 @@ namespace IronWren
             setListElement(vm, listSlot, index, elementSlot);
         }
 
+        /// <summary>
+        /// Returns the number of elements in the list stored in <paramref name="slot"/>.
+        /// </summary>
+        /// <param name="slot">The slot containing the list.</param>
+        /// <returns>The number of elements in the list.</returns>
+        public int GetListCount(int slot)
+        {
+            return getListCount(vm, slot);
+        }
+
         #endregion List
 
         #region Map
@@ -722,7 +765,7 @@ namespace IronWren
         private static extern void insertInList(IntPtr vm, int listSlot, int index, int elementSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getListCount(IntPtr vm, int slot);
+        private static extern int getListCount(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListElement", CallingConvention = CallingConvention.Cdecl)]
         private static extern void getListElement(IntPtr vm, int listSlot, int index, int elementSlot);
@@ -778,7 +821,7 @@ namespace IronWren
         private static extern void freeVM(IntPtr vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenAbortFiber", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void wrenAbortFiber(IntPtr vm, int slot);
+        public static extern void abortFiber(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetUserData", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr getUserData(IntPtr vm);
