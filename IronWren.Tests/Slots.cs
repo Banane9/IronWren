@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-
-namespace IronWren.Tests
+﻿namespace IronWren.Tests
 {
     [TestClass]
     public sealed class Slots
@@ -100,11 +97,51 @@ namespace IronWren.Tests
             vm.SetSlotNull(0, 1);
 
             vm.SetSlotNewList(0);
+
+            Assert.AreEqual(WrenType.List, vm.GetSlotType(0));
+
+            Assert.AreEqual(0, vm.GetListCount(0));
+
             vm.SetSlotDouble(1, 9);
 
             vm.InsertInList(0, -1, 1);
 
-            Assert.AreEqual(WrenType.List, vm.GetSlotType(0));
+            Assert.AreEqual(1, vm.GetListCount(0));
+
+            vm.SetSlotNull(1);
+            vm.GetListElement(0, 0, 1);
+            Assert.AreEqual(WrenType.Number, vm.GetSlotType(1));
+            Assert.AreEqual(9, vm.GetSlotDouble(1));
+
+            vm.SetSlotDouble(1, 3);
+            vm.SetListElement(0, 0, 1);
+            vm.SetSlotNull(1);
+            vm.GetListElement(0, 0, 1);
+            Assert.AreEqual(WrenType.Number, vm.GetSlotType(1));
+            Assert.AreEqual(3, vm.GetSlotDouble(1));
+        }
+
+        [TestMethod]
+        public void Map()
+        {
+            vm.EnsureSlots(4);
+            vm.SetSlotNull(0, 1, 2, 3);
+
+            vm.SetSlotNewMap(0);
+            Assert.AreEqual(WrenType.Map, vm.GetSlotType(0));
+
+            vm.SetSlotString(1, "key");
+            vm.SetSlotString(2, "value");
+            vm.SetMapValue(0, 1, 2);
+
+            Assert.AreEqual(1, vm.GetMapCount(0));
+            Assert.IsTrue(vm.GetMapContainsKey(0, 1));
+
+            vm.GetMapValue(0, 1, 3);
+            Assert.AreEqual("value", vm.GetSlotString(3));
+
+            vm.RemoveMapValue(0, 1, 2);
+            Assert.AreEqual(0, vm.GetMapCount(0));
         }
 
         [TestMethod]

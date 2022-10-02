@@ -1,9 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace IronWren.Tests
+﻿namespace IronWren.Tests
 {
     [TestClass]
     public sealed class Functions
@@ -15,7 +10,7 @@ namespace IronWren.Tests
         {
             vm = new WrenVM();
             vm.Config.Write += (vm, text) => output.Add(text);
-            vm.Config.Error += (type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
+            vm.Config.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
         }
 
         [TestMethod]
@@ -28,7 +23,7 @@ namespace IronWren.Tests
             var fnHandle = vm.MakeCallHandle("call(_)");
 
             vm.EnsureSlots(2);
-            vm.GetVariable(WrenVM.InterpetModule, "test", 0);
+            vm.GetVariable(WrenVM.MainModule, "test", 0);
             vm.SetSlotString(1, "testing!");
 
             Assert.AreEqual(WrenInterpretResult.Success, vm.Call(fnHandle));
@@ -48,7 +43,7 @@ namespace IronWren.Tests
             var fnHandle = vm.MakeCallHandle("call()");
 
             vm.EnsureSlots(1);
-            vm.GetVariable(WrenVM.InterpetModule, "test", 0);
+            vm.GetVariable(WrenVM.MainModule, "test", 0);
 
             Assert.AreEqual(WrenInterpretResult.Success, vm.Call(fnHandle));
 

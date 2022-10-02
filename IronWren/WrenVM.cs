@@ -13,11 +13,11 @@ namespace IronWren
         /// <summary>
         /// The name of the module in which calls to <see cref="Interpret(string)"/> are evaluated.
         /// </summary>
-        public const string InterpetModule = "main";
+        public const string MainModule = "main";
 
         // Also stops CodeMaid from reorganizing the file
 #if DEBUG
-        internal const string WrenLib = "Native/wren-debug";
+        internal const string WrenLib = "Native/wren";
 #else
         internal const string WrenLib = "Native/wren";
 #endif
@@ -98,13 +98,33 @@ namespace IronWren
         #region Managed Wrappers
 
         /// <summary>
+        /// Get the current wren version number.
+        ///
+        /// Can be used to range checks over versions.
+        /// </summary>
+        public static int GetVersionNumber()
+        {
+            return getVersionNumber();
+        }
+
+        /// <summary>
+        /// Runs the given string of Wren source code in a new fiber in the VM.
+        /// </summary>
+        /// <param name="source">The Wren source code to run.</param>
+        /// <returns>The status of the interpretion.</returns>
+        public WrenInterpretResult Interpret(string module, string source)
+        {
+            return interpret(vm, module, source);
+        }
+
+        /// <summary>
         /// Runs the given string of Wren source code in a new fiber in the VM.
         /// </summary>
         /// <param name="source">The Wren source code to run.</param>
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Interpret(string source)
         {
-            return interpret(vm, source);
+            return Interpret(MainModule, source);
         }
 
         /// <summary>
@@ -176,6 +196,29 @@ namespace IronWren
         }
 
         /// <summary>
+        /// Looks up the top level variable with <paramref name="name"/> in resolved <paramref name="module"/>, 
+        /// returns false if not found. The module must be imported at the time, 
+        /// use wrenHasModule to ensure that before calling.
+        /// </summary>
+        /// <param name="module">The module to look for the variable in.</param>
+        /// <param name="name">The name of the variable to look for.</param>
+        /// <returns>True if a variable with the name is resolved in the module.</returns>
+        public bool HasVariable(string module, string name)
+        {
+            return hasVariable(vm, module, name);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="module"/> has been imported/resolved before, false if not.
+        /// </summary>
+        /// <param name="module">The module to check for.</param>
+        /// <returns>True if the module has been imported/resolved before, false if not.</returns>
+        public bool HasModule(string module)
+        {
+            return hasModule(vm, module);
+        }
+
+        /// <summary>
         /// Looks up the top level variable with the given name in the given module and stores it in the given slot.
         /// </summary>
         /// <param name="module">The module that the variable is in.</param>
@@ -184,6 +227,16 @@ namespace IronWren
         public void GetVariable(string module, string name, int slot)
         {
             getVariable(vm, module, name, slot);
+        }
+
+        /// <summary>
+        /// Sets the current fiber to be aborted, and uses the value in <paramref name="slot"/> as the
+        /// runtime error object.
+        /// </summary>
+        /// <param name="slot">The slot containing runtime error object.</param>
+        public void AbortFiber(int slot)
+        {
+            abortFiber(vm, slot);
         }
 
         /// <summary>
@@ -478,7 +531,110 @@ namespace IronWren
             insertInList(vm, listSlot, index, elementSlot);
         }
 
+        /// <summary>
+        /// Reads element <paramref name="index"/> from the list in <paramref name="listSlot"/> and stores it in
+        /// <paramref name="elementSlot"/>.
+        /// </summary>
+        /// <param name="listSlot">The slot containing the list.</param>
+        /// <param name="index">The index in the list of the element to retrieve.</param>
+        /// <param name="elementSlot">The slot to place the retrieved list element into.</param>
+        public void GetListElement(int listSlot, int index, int elementSlot)
+        {
+            getListElement(vm, listSlot, index, elementSlot);
+        }
+
+        /// <summary>
+        /// Sets the value stored at <paramref name="index"/> in the list at <paramref name="listSlot"/>, 
+        /// to the value from <paramref name="elementSlot"/>. 
+        /// </summary>
+        /// <param name="listSlot">The slot containing the list.</param>
+        /// <param name="index">The index in the list where the element should be placed.</param>
+        /// <param name="elementSlot">The slot containing the element to place into the list.</param>
+        public void SetListElement(int listSlot, int index, int elementSlot)
+        {
+            setListElement(vm, listSlot, index, elementSlot);
+        }
+
+        /// <summary>
+        /// Returns the number of elements in the list stored in <paramref name="slot"/>.
+        /// </summary>
+        /// <param name="slot">The slot containing the list.</param>
+        /// <returns>The number of elements in the list.</returns>
+        public int GetListCount(int slot)
+        {
+            return getListCount(vm, slot);
+        }
+
         #endregion List
+
+        #region Map
+
+        /// <summary>
+        /// Stores a new empty map in <paramref name="slot"/>.
+        /// </summary>
+        /// <param name="slot">The slot to place the new map into.</param>
+        public void SetSlotNewMap(int slot)
+        {
+            setSlotNewMap(vm, slot);
+        }
+
+        /// <summary>
+        /// Returns the number of entries in the map stored in <paramref name="slot"/>.
+        /// </summary>
+        /// <param name="slot">The slot containing the map.</param>
+        public int GetMapCount(int slot)
+        {
+            return getMapCount(vm, slot);
+        }
+
+        /// <summary>
+        /// Returns true if the key in <paramref name="keySlot"/> is found in the map placed in <paramref name="mapSlot"/>.
+        /// </summary>
+        /// <param name="mapSlot">The slot containing the map.</param>
+        /// <param name="keySlot">The slot containing the key to look for.</param>
+        public bool GetMapContainsKey(int mapSlot, int keySlot)
+        {
+            return getMapContainsKey(vm, mapSlot, keySlot);
+        }
+
+        /// <summary>
+        /// Retrieves a value with the key in <paramref name="keySlot"/> from the map in <paramref name="mapSlot"/> and
+        /// stores it in <paramref name="valueSlot"/>.
+        /// </summary>
+        /// <param name="mapSlot">The slot containing the map.</param>
+        /// <param name="keySlot">The slot containing the key to look for.</param>
+        /// <param name="valueSlot">The slot to store the found value in.</param>
+        public void GetMapValue(int mapSlot, int keySlot, int valueSlot)
+        {
+            getMapValue(vm, mapSlot, keySlot, valueSlot);
+        }
+
+        /// <summary>
+        /// Takes the value stored at <paramref name="valueSlot"/> and inserts it into the map stored
+        /// at <paramref name="mapSlot"/> with key <paramref name="keySlot"/>.
+        /// </summary>
+        /// <param name="mapSlot">The slot containing the map.</param>
+        /// <param name="keySlot">The slot containing the key to use.</param>
+        /// /// <param name="keySlot">The slot containing the value to use.</param>
+        public void SetMapValue(int mapSlot, int keySlot, int valueSlot)
+        {
+            setMapValue(vm, mapSlot, keySlot, valueSlot);
+        }
+
+        /// <summary>
+        /// Removes a value from the map in <paramref name="mapSlot"/>, with the key from <paramref name="keySlot"/>,
+        /// and place it in <paramref name="removedValueSlot"/>. If not found, <paramref name="removedValueSlot"/> is
+        /// set to null, the same behaviour as the Wren Map API.
+        /// </summary>
+        /// <param name="mapSlot">The slot containing the map.</param>
+        /// <param name="keySlot">The slot containing the key to look for.</param>
+        /// <param name="removedValueSlot">The slot to place the removed value in, or null if the key is not found.</param>
+        public void RemoveMapValue(int mapSlot, int keySlot, int removedValueSlot)
+        {
+            removeMapValue(vm, mapSlot, keySlot, removedValueSlot);
+        }
+
+        #endregion
 
         #endregion Slot Interactions
 
@@ -486,8 +642,11 @@ namespace IronWren
 
         #region Native Bindings
 
+        [DllImport(WrenLib, EntryPoint = "wrenGetVersionNumber", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int getVersionNumber();
+
         [DllImport(WrenLib, EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult interpret(IntPtr vm, [MarshalAs(UnmanagedType.LPStr), In]string source);
+        private static extern WrenInterpretResult interpret(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string source);
 
         #region Slot Interactions
 
@@ -497,6 +656,13 @@ namespace IronWren
         [DllImport(WrenLib, EntryPoint = "wrenGetVariable", CallingConvention = CallingConvention.Cdecl)]
         private static extern void getVariable(IntPtr vm,
             [MarshalAs(UnmanagedType.LPStr), In]string module, [MarshalAs(UnmanagedType.LPStr), In]string name, int slot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenHasVariable", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool hasVariable(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
+
+        [DllImport(WrenLib, EntryPoint = "wrenHasModule", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool hasModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module);
+
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNull", CallingConvention = CallingConvention.Cdecl)]
         private static extern void setSlotNull(IntPtr vm, int slot);
@@ -598,7 +764,38 @@ namespace IronWren
         [DllImport(WrenLib, EntryPoint = "wrenInsertInList", CallingConvention = CallingConvention.Cdecl)]
         private static extern void insertInList(IntPtr vm, int listSlot, int index, int elementSlot);
 
+        [DllImport(WrenLib, EntryPoint = "wrenGetListCount", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int getListCount(IntPtr vm, int slot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenGetListElement", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void getListElement(IntPtr vm, int listSlot, int index, int elementSlot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenSetListElement", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void setListElement(IntPtr vm, int listSlot, int index, int elementSlot);
+
         #endregion List
+
+        #region Map
+
+        [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewMap", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void setSlotNewMap(IntPtr vm, int slot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenGetMapCount", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int getMapCount(IntPtr vm, int slot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenGetMapContainsKey", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool getMapContainsKey(IntPtr vm, int mapSlot, int keySlot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenGetMapValue", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void getMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenSetMapValue", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void setMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenRemoveMapValue", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void removeMapValue(IntPtr vm, int mapSlot, int keySlot, int removedValueSlot);
+
+        #endregion Map
 
         #endregion Slot Interactions
 
@@ -622,6 +819,15 @@ namespace IronWren
 
         [DllImport(WrenLib, EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern void freeVM(IntPtr vm);
+
+        [DllImport(WrenLib, EntryPoint = "wrenAbortFiber", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void abortFiber(IntPtr vm, int slot);
+
+        [DllImport(WrenLib, EntryPoint = "wrenGetUserData", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr getUserData(IntPtr vm);
+
+        [DllImport(WrenLib, EntryPoint = "wrenSetUserData", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void setUserData(IntPtr vm, IntPtr userData);
 
         #endregion VM Lifecycle
 
