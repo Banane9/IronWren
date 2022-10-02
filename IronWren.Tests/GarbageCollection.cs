@@ -8,27 +8,33 @@ namespace IronWren.Tests
         [TestMethod]
         public void Basic()
         {
-            var vm = new WeakReference<WrenVM>(new WrenVM());
+            var vm = getVM();
 
             GC.Collect();
 
-            WrenVM _;
             Assert.IsFalse(vm.TryGetTarget(out _));
         }
 
         [TestMethod]
         public void WithAutoMapper()
         {
-            var vm = new WrenVM();
-            vm.AutoMap<Test>();
-
-            var wrVM = new WeakReference<WrenVM>(vm);
-            vm = null;
+            var vm = getVM();
+            applyAutoMapping(vm);
 
             GC.Collect();
 
-            WrenVM _;
-            Assert.IsFalse(wrVM.TryGetTarget(out _));
+            Assert.IsFalse(vm.TryGetTarget(out _));
+        }
+
+        private void applyAutoMapping(WeakReference<WrenVM> wrVM)
+        {
+            wrVM.TryGetTarget(out var vm);
+            vm.AutoMap<Test>();
+        }
+
+        private WeakReference<WrenVM> getVM()
+        {
+            return new WeakReference<WrenVM>(new WrenVM());
         }
 
         private class Test
