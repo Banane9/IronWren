@@ -17,9 +17,9 @@ namespace IronWren
 
         // Also stops CodeMaid from reorganizing the file
 #if DEBUG
-        internal const string WrenLib = "Native/wren.dll";
+        internal const string WrenLib = "Native/wren";
 #else
-        internal const string WrenLib = "Native/wren.dll";
+        internal const string WrenLib = "Native/wren";
 #endif
 
         private static readonly Dictionary<IntPtr, WeakReference<WrenVM>> vms = new Dictionary<IntPtr, WeakReference<WrenVM>>();
@@ -658,10 +658,10 @@ namespace IronWren
             [MarshalAs(UnmanagedType.LPStr), In]string module, [MarshalAs(UnmanagedType.LPStr), In]string name, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasVariable", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool hasVariable(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
+        private static extern bool hasVariable(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasModule", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool hasModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module);
+        private static extern bool hasModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module);
 
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNull", CallingConvention = CallingConvention.Cdecl)]
@@ -778,22 +778,22 @@ namespace IronWren
         #region Map
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewMap", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void setSlotNewMap(IntPtr vm, int slot);
+        private static extern void setSlotNewMap(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapCount", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int getMapCount(IntPtr vm, int slot);
+        private static extern int getMapCount(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapContainsKey", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool getMapContainsKey(IntPtr vm, int mapSlot, int keySlot);
+        private static extern bool getMapContainsKey(IntPtr vm, int mapSlot, int keySlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void getMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void getMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void setMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void setMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenRemoveMapValue", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void removeMapValue(IntPtr vm, int mapSlot, int keySlot, int removedValueSlot);
+        private static extern void removeMapValue(IntPtr vm, int mapSlot, int keySlot, int removedValueSlot);
 
         #endregion Map
 
@@ -821,13 +821,13 @@ namespace IronWren
         private static extern void freeVM(IntPtr vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenAbortFiber", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void abortFiber(IntPtr vm, int slot);
+        private static extern void abortFiber(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetUserData", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr getUserData(IntPtr vm);
+        private static extern IntPtr getUserData(IntPtr vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetUserData", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void setUserData(IntPtr vm, IntPtr userData);
+        private static extern void setUserData(IntPtr vm, IntPtr userData);
 
         #endregion VM Lifecycle
 
