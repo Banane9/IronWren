@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+// Stop CodeMaid from reorganizing the file
+#if DEBUG
+#endif
 
 namespace IronWren
 {
@@ -10,18 +15,14 @@ namespace IronWren
     /// </summary>
     public class WrenConfig
     {
-        // Stop CodeMaid from reorganizing the file
-#if DEBUG
-#endif
-
-        internal Config config;
+        private InternalConfig config;
 
         /// <summary>
         /// Gets whether this <see cref="WrenConfig"/> has been used to create a VM already.
         /// <para/>
         /// Some values can't be changed anymore after it has been used, as it won't have any effect.
         /// </summary>
-        public bool Used { get; internal set; }
+        public bool Used { get; private set; }
 
         /// <summary>
         /// The callback Wren will use to allocate, reallocate, and deallocate memory.
@@ -181,8 +182,18 @@ namespace IronWren
             }
         }
 
+        /// <summary>
+        /// Returns the internal config struct expected by Wren and marks this <see cref="WrenConfig"/> as used.
+        /// </summary>
+        /// <returns>The internal config struct expected by Wren.</returns>
+        internal InternalConfig UseConfig()
+        {
+            Used = true;
+            return config;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Config
+        internal struct InternalConfig
         {
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenReallocate Reallocate;
@@ -229,68 +240,51 @@ namespace IronWren
             config.Error = error;
         }
 
-        private IntPtr resolveModule(IntPtr vm, string importer, string name)
+        private string resolveModule(IntPtr vm, string importer, string name)
         {
-            // if there is no ResolveModule implemented, return the input
+            // if no ResolveModule subscriber resolves the name, return the input
             string result = name;
 
-            if (ResolveModule != null)
-            {
-                var resolveResult = ResolveModule.GetInvocationList().Cast<WrenResolveModule>()
-                    .Select(resolveModule => resolveModule(WrenVM.GetVM(vm), importer, name))
-                    .FirstOrDefault(res => res != null);
+            if (ResolveModule == null)
+                return name;
 
-                if (resolveResult != null)
-                {
-                    result = resolveResult;
-                }
-            }
+            var resolveResult = ResolveModule.GetInvocationList().Cast<WrenResolveModule>()
+                .Select(resolveModule => resolveModule(WrenVM.GetVM(vm), importer, name))
+                .FirstOrDefault(res => res != null);
 
-            IntPtr resultPtr = Marshal.StringToCoTaskMemAnsi(name);
-            return resultPtr;
+            if (resolveResult == null)
+                return name;
+
+            return resolveResult;
         }
 
         private WrenLoadModuleResultInternal loadModule(IntPtr vm, string name)
         {
-            WrenLoadModuleResultInternal result = default;
-
-            if (LoadModule == null)
-                return result;
-
             // Only one of the multiple possible LoadModule implementations must actually return the source for the module
-            var externalResult = LoadModule.GetInvocationList().Cast<WrenLoadModule>()
+            var externalResult = LoadModule?.GetInvocationList().Cast<WrenLoadModule>()
                 .Select(loadModule => loadModule(WrenVM.GetVM(vm), name))
-                .FirstOrDefault(res => res != null && res.Source != null);
+                .FirstOrDefault(res => !string.IsNullOrWhiteSpace(res?.Source));
 
             if (externalResult == null)
-                return result;
+                return default;
 
-            // Possibly have to free this again
-            result.source = externalResult.Source;
-
-            return result;
+            return externalResult.GetStruct();
         }
 
-        private static List<WrenForeignMethodInternal> wrappedResults = new List<WrenForeignMethodInternal>();
-
-        private WrenForeignMethodInternal bindForeignMethod(IntPtr vm, string module, string className, bool isStatic, string signature)
+        private WrenForeignMethodInternal bindForeignMethod(IntPtr vmPtr, string module, string className, bool isStatic, string signature)
         {
-            if (BindForeignMethod == null)
-                return null;
+            var vm = WrenVM.GetVM(vmPtr);
 
             // Only one of the multiple possible BindForeignMethod implementations must actually return a method.
-            var result = BindForeignMethod.GetInvocationList().Cast<WrenBindForeignMethod>()
-                .Select(bindForeignMethod => bindForeignMethod(WrenVM.GetVM(vm), module, className, isStatic, signature))
+            var result = BindForeignMethod?.GetInvocationList().Cast<WrenBindForeignMethod>()
+                .Select(bindForeignMethod => bindForeignMethod(vm, module, className, isStatic, signature))
                 .SingleOrDefault(res => res != null);
 
             if (result == null)
                 return null;
 
             // Have to save the delegate so it isn't GCed
-            WrenForeignMethodInternal wrappedResult = vmPtr => result(WrenVM.GetVM(vmPtr));
-            wrappedResults.Add(wrappedResult);
-
-            return wrappedResult;
+            return vm.PreserveForeignMethod(result);
         }
 
         private static Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal> classMethods =
@@ -316,21 +310,15 @@ namespace IronWren
 
         private void write(IntPtr vm, string text)
         {
-            if (Write == null)
-                return;
-
-            Write(WrenVM.GetVM(vm), text);
+            Write?.Invoke(WrenVM.GetVM(vm), text);
         }
 
         private void error(IntPtr vm, WrenErrorType type, string module, int line, string message)
         {
-            if (Error == null)
-                return;
-
-            Error(WrenVM.GetVM(vm), type, module, line, message);
+            Error?.Invoke(WrenVM.GetVM(vm), type, module, line, message);
         }
 
         [DllImport(WrenVM.WrenLib, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void initConfiguration([Out]out Config config);
+        private static extern void initConfiguration([Out] out InternalConfig config);
     }
 }

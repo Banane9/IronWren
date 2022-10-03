@@ -26,6 +26,8 @@ namespace IronWren
 
         private IntPtr vm;
 
+        private readonly HashSet<WrenForeignMethodInternal> foreignMethods = new HashSet<WrenForeignMethodInternal>();
+
         /// <summary>
         /// Gets the config used for this VM.
         /// </summary>
@@ -37,11 +39,11 @@ namespace IronWren
         /// <param name="config">The config for the VM. Will be kept safe by this class.</param>
         public WrenVM(WrenConfig config)
         {
-            vm = newVM(ref config.config);
-            vms.Add(vm, new WeakReference<WrenVM>(this));
-
             Config = config;
-            Config.Used = true;
+            var configStruct = config.UseConfig();
+
+            vm = newVM(ref configStruct);
+            vms.Add(vm, new WeakReference<WrenVM>(this));
         }
 
         /// <summary>
@@ -73,6 +75,15 @@ namespace IronWren
             GC.SuppressFinalize(this);
         }
 
+        internal WrenForeignMethodInternal PreserveForeignMethod(WrenForeignMethod foreignMethod)
+        {
+            WrenForeignMethodInternal wrappedForeignMethod = vmPtr => foreignMethod(this);
+
+            foreignMethods.Add(wrappedForeignMethod);
+
+            return wrappedForeignMethod;
+        }
+
         /// <summary>
         /// Gets the <see cref="WrenVM"/> associated with the given IntPtr.
         /// </summary>
@@ -83,13 +94,10 @@ namespace IronWren
             if (ptr == IntPtr.Zero)
                 throw new ArgumentException("Pointer can't be a null pointer!", nameof(ptr));
 
-            if (!vms.ContainsKey(ptr))
+            if (!vms.TryGetValue(ptr, out var wrVM))
                 throw new ArgumentException("No VM with that pointer found!", nameof(ptr));
 
-            var wrVM = vms[ptr];
-
-            WrenVM vm;
-            if (!wrVM.TryGetTarget(out vm))
+            if (!wrVM.TryGetTarget(out var vm))
                 throw new Exception("The VM instance was garbage collected and still received a callback!");
 
             return vm;
@@ -196,8 +204,8 @@ namespace IronWren
         }
 
         /// <summary>
-        /// Looks up the top level variable with <paramref name="name"/> in resolved <paramref name="module"/>, 
-        /// returns false if not found. The module must be imported at the time, 
+        /// Looks up the top level variable with <paramref name="name"/> in resolved <paramref name="module"/>,
+        /// returns false if not found. The module must be imported at the time,
         /// use wrenHasModule to ensure that before calling.
         /// </summary>
         /// <param name="module">The module to look for the variable in.</param>
@@ -544,8 +552,8 @@ namespace IronWren
         }
 
         /// <summary>
-        /// Sets the value stored at <paramref name="index"/> in the list at <paramref name="listSlot"/>, 
-        /// to the value from <paramref name="elementSlot"/>. 
+        /// Sets the value stored at <paramref name="index"/> in the list at <paramref name="listSlot"/>,
+        /// to the value from <paramref name="elementSlot"/>.
         /// </summary>
         /// <param name="listSlot">The slot containing the list.</param>
         /// <param name="index">The index in the list where the element should be placed.</param>
@@ -634,7 +642,7 @@ namespace IronWren
             removeMapValue(vm, mapSlot, keySlot, removedValueSlot);
         }
 
-        #endregion
+        #endregion Map
 
         #endregion Slot Interactions
 
@@ -655,14 +663,13 @@ namespace IronWren
 
         [DllImport(WrenLib, EntryPoint = "wrenGetVariable", CallingConvention = CallingConvention.Cdecl)]
         private static extern void getVariable(IntPtr vm,
-            [MarshalAs(UnmanagedType.LPStr), In]string module, [MarshalAs(UnmanagedType.LPStr), In]string name, int slot);
+            [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string name, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasVariable", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool hasVariable(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasModule", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool hasModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module);
-
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNull", CallingConvention = CallingConvention.Cdecl)]
         private static extern void setSlotNull(IntPtr vm, int slot);
@@ -752,7 +759,7 @@ namespace IronWren
         private static extern IntPtr getSlotString(IntPtr vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotString", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotString(IntPtr vm, int slot, [MarshalAs(UnmanagedType.LPStr), In]string text);
+        private static extern void setSlotString(IntPtr vm, int slot, [MarshalAs(UnmanagedType.LPStr), In] string text);
 
         #endregion String
 
@@ -802,7 +809,7 @@ namespace IronWren
         #region Function Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenMakeCallHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr makeCallHandle(IntPtr vm, [MarshalAs(UnmanagedType.LPStr), In]string signature);
+        private static extern IntPtr makeCallHandle(IntPtr vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
 
         [DllImport(WrenLib, EntryPoint = "wrenCall", CallingConvention = CallingConvention.Cdecl)]
         private static extern WrenInterpretResult call(IntPtr vm, IntPtr callHandle);
@@ -812,7 +819,7 @@ namespace IronWren
         #region VM Lifecycle
 
         [DllImport(WrenLib, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr newVM([In]ref WrenConfig.Config config);
+        private static extern IntPtr newVM([In] ref WrenConfig.InternalConfig config);
 
         [DllImport(WrenLib, EntryPoint = "wrenCollectGarbage", CallingConvention = CallingConvention.Cdecl)]
         private static extern void collectGarbage(IntPtr vm);

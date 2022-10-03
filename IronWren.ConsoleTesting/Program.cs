@@ -33,6 +33,7 @@ namespace IronWren.ConsoleTesting
 
             using (var vm = new WrenVM(config))
             {
+                Console.WriteLine("Running Wren Version " + WrenVM.GetVersionNumber());
                 var result = vm.Interpret("System.print(\"Hi from Wren!\")");
 
                 result = vm.Interpret("var helloTo = Fn.new { |name|\n" +
