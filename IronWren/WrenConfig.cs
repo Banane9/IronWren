@@ -15,7 +15,7 @@ namespace IronWren
     /// </summary>
     public class WrenConfig
     {
-        private InternalConfig config;
+        private readonly InternalConfig config = new InternalConfig();
 
         /// <summary>
         /// Gets whether this <see cref="WrenConfig"/> has been used to create a VM already.
@@ -193,7 +193,7 @@ namespace IronWren
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct InternalConfig
+        internal class InternalConfig
         {
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public WrenReallocate Reallocate;

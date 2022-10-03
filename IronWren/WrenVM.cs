@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,7 +9,7 @@ namespace IronWren
     /// <summary>
     /// Represents an instance of a VM running Wren.
     /// </summary>
-    public sealed partial class WrenVM : IDisposable
+    public sealed partial class WrenVM : SafeHandleZeroOrMinusOneIsInvalid
     {
         /// <summary>
         /// The name of the module in which calls to <see cref="Interpret(string)"/> are evaluated.
@@ -18,7 +19,6 @@ namespace IronWren
         private static readonly Dictionary<IntPtr, WeakReference<WrenVM>> vms = new Dictionary<IntPtr, WeakReference<WrenVM>>();
 
         private readonly HashSet<WrenForeignMethodInternal> foreignMethods = new HashSet<WrenForeignMethodInternal>();
-        private IntPtr vm;
 
         /// <summary>
         /// Gets the config used for this VM.
@@ -30,12 +30,12 @@ namespace IronWren
         /// </summary>
         /// <param name="config">The config for the VM. Will be kept safe by this class.</param>
         public WrenVM(WrenConfig config)
+            : base(true)
         {
             Config = config;
-            var configStruct = config.UseConfig();
+            SetHandle(newVM(config.UseConfig()));
 
-            vm = newVM(ref configStruct);
-            vms.Add(vm, new WeakReference<WrenVM>(this));
+            vms.Add(handle, new WeakReference<WrenVM>(this));
         }
 
         /// <summary>
@@ -44,28 +44,6 @@ namespace IronWren
         public WrenVM()
             : this(new WrenConfig())
         { }
-
-        /// <summary>
-        /// Frees the memory used by the VM if it hasn't been disposed of.
-        /// </summary>
-        ~WrenVM()
-        {
-            vms.Remove(vm);
-
-            freeVM(vm);
-        }
-
-        /// <summary>
-        /// Frees the memory used by the VM. This makes it unusable.
-        /// </summary>
-        public void Dispose()
-        {
-            vms.Remove(vm);
-
-            freeVM(vm);
-
-            GC.SuppressFinalize(this);
-        }
 
         /// <summary>
         /// Gets the <see cref="WrenVM"/> associated with the given IntPtr.

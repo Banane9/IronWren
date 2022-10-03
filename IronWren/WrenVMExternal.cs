@@ -1,11 +1,13 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace IronWren
 {
-    public sealed partial class WrenVM
+    public sealed partial class WrenVM : SafeHandleZeroOrMinusOneIsInvalid
     {
         // Also stops CodeMaid from reorganizing the file
 #if DEBUG
@@ -13,6 +15,13 @@ namespace IronWren
 #else
         internal const string WrenLib = "Native/wren";
 #endif
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        protected override bool ReleaseHandle()
+        {
+            freeVM(handle);
+            return true;
+        }
 
         #region Managed Wrappers
 
@@ -33,7 +42,7 @@ namespace IronWren
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Interpret(string module, string source)
         {
-            return interpret(vm, module, source);
+            return interpret(this, module, source);
         }
 
         /// <summary>
@@ -51,15 +60,15 @@ namespace IronWren
         /// </summary>
         public void CollectGarbage()
         {
-            collectGarbage(vm);
+            collectGarbage(this);
         }
 
         /// <summary>
         /// Releases the handle and allows the GC to claim the memory.
         /// </summary>
-        internal void ReleaseHandle(WrenHandle handle)
+        internal void ReleaseHandle(WrenHandle wrenHandle)
         {
-            releaseHandle(vm, handle.HandlePtr);
+            releaseHandle(this, wrenHandle.HandlePtr);
         }
 
         #region Function Interactions
@@ -80,7 +89,7 @@ namespace IronWren
         /// <returns>A handle to the function.</returns>
         public WrenFunctionHandle MakeCallHandle(string signature)
         {
-            return new WrenFunctionHandle(this, makeCallHandle(vm, signature));
+            return new WrenFunctionHandle(this, makeCallHandle(this, signature));
         }
 
         /// <summary>
@@ -95,9 +104,9 @@ namespace IronWren
         /// </summary>
         /// <param name="handle">The call handle of the function.</param>
         /// <returns>The status of the interpretion.</returns>
-        public WrenInterpretResult Call(WrenFunctionHandle handle)
+        public WrenInterpretResult Call(WrenFunctionHandle wrenHandle)
         {
-            return call(vm, handle.HandlePtr);
+            return call(this, wrenHandle.HandlePtr);
         }
 
         #endregion Function Interactions
@@ -111,7 +120,7 @@ namespace IronWren
         /// <returns>The type of data in the slot.</returns>
         public WrenType GetSlotType(int slot)
         {
-            return getSlotType(vm, slot);
+            return getSlotType(this, slot);
         }
 
         /// <summary>
@@ -124,7 +133,7 @@ namespace IronWren
         /// <returns>True if a variable with the name is resolved in the module.</returns>
         public bool HasVariable(string module, string name)
         {
-            return hasVariable(vm, module, name);
+            return hasVariable(this, module, name);
         }
 
         /// <summary>
@@ -134,7 +143,7 @@ namespace IronWren
         /// <returns>True if the module has been imported/resolved before, false if not.</returns>
         public bool HasModule(string module)
         {
-            return hasModule(vm, module);
+            return hasModule(this, module);
         }
 
         /// <summary>
@@ -145,7 +154,7 @@ namespace IronWren
         /// <param name="slot">The slot to store it in.</param>
         public void GetVariable(string module, string name, int slot)
         {
-            getVariable(vm, module, name, slot);
+            getVariable(this, module, name, slot);
         }
 
         /// <summary>
@@ -155,7 +164,7 @@ namespace IronWren
         /// <param name="slot">The slot containing runtime error object.</param>
         public void AbortFiber(int slot)
         {
-            abortFiber(vm, slot);
+            abortFiber(this, slot);
         }
 
         /// <summary>
@@ -168,7 +177,7 @@ namespace IronWren
                 throw new ArgumentNullException(nameof(slots));
 
             foreach (var slot in slots)
-                setSlotNull(vm, slot);
+                setSlotNull(this, slot);
         }
 
         #region Slot Count
@@ -184,7 +193,7 @@ namespace IronWren
         /// <param name="count">The minimum number of slots.</param>
         public void EnsureSlots(int count)
         {
-            ensureSlots(vm, count);
+            ensureSlots(this, count);
         }
 
         /// <summary>
@@ -193,7 +202,7 @@ namespace IronWren
         /// <returns>The number of slots available to the current foreign method.</returns>
         public int GetSlotCount()
         {
-            return getSlotCount(vm);
+            return getSlotCount(this);
         }
 
         #endregion Slot Count
@@ -210,7 +219,7 @@ namespace IronWren
         /// <returns>A handle to the value in the slot.</returns>
         public WrenValueHandle GetSlotHandle(int slot)
         {
-            return new WrenValueHandle(this, getSlotHandle(vm, slot));
+            return new WrenValueHandle(this, getSlotHandle(this, slot));
         }
 
         /// <summary>
@@ -220,9 +229,9 @@ namespace IronWren
         /// </summary>
         /// <param name="slot">The slot to write the value captured by the value handle to.</param>
         /// <param name="handle">The value handle.</param>
-        public void SetSlotHandle(int slot, WrenValueHandle handle)
+        public void SetSlotHandle(int slot, WrenValueHandle wrenHandle)
         {
-            setSlotHandle(vm, slot, handle.HandlePtr);
+            setSlotHandle(this, slot, wrenHandle.HandlePtr);
         }
 
         #endregion Handle
@@ -238,7 +247,7 @@ namespace IronWren
         /// <returns>The boolean contained in the slot.</returns>
         public bool GetSlotBool(int slot)
         {
-            return getSlotBool(vm, slot);
+            return getSlotBool(this, slot);
         }
 
         /// <summary>
@@ -248,7 +257,7 @@ namespace IronWren
         /// <param name="value">The boolean to write to the slot.</param>
         public void SetSlotBool(int slot, bool value)
         {
-            setSlotBool(vm, slot, value);
+            setSlotBool(this, slot, value);
         }
 
         #endregion Bool
@@ -265,7 +274,7 @@ namespace IronWren
         public byte[] GetSlotBytes(int slot)
         {
             int length;
-            var bytesPtr = getSlotBytes(vm, slot, out length);
+            var bytesPtr = getSlotBytes(this, slot, out length);
 
             var bytes = new byte[length];
             Marshal.Copy(bytesPtr, bytes, 0, length);
@@ -285,7 +294,7 @@ namespace IronWren
         {
             var bytesPtr = GCHandle.Alloc(value, GCHandleType.Pinned);
 
-            setSlotBytes(vm, slot, bytesPtr.AddrOfPinnedObject(), (uint)value.Length);
+            setSlotBytes(this, slot, bytesPtr.AddrOfPinnedObject(), (uint)value.Length);
 
             bytesPtr.Free();
         }
@@ -303,7 +312,7 @@ namespace IronWren
         /// <returns>The double contained in the slot.</returns>
         public double GetSlotDouble(int slot)
         {
-            return getSlotDouble(vm, slot);
+            return getSlotDouble(this, slot);
         }
 
         /// <summary>
@@ -313,7 +322,7 @@ namespace IronWren
         /// <param name="value">The double to write to the slot.</param>
         public void SetSlotDouble(int slot, double value)
         {
-            setSlotDouble(vm, slot, value);
+            setSlotDouble(this, slot, value);
         }
 
         #endregion Double
@@ -346,7 +355,7 @@ namespace IronWren
         /// <returns>The foreign object.</returns>
         public object GetSlotForeign(int slot)
         {
-            var dataPtr = getSlotForeign(vm, slot);
+            var dataPtr = getSlotForeign(this, slot);
             var objectId = Marshal.ReadInt32(dataPtr);
 
             if (!foreignObjects.ContainsKey(objectId))
@@ -366,7 +375,7 @@ namespace IronWren
 
             foreignObjects.Add(objectId, foreignObject);
 
-            var dataPtr = setSlotNewForeign(vm, slot, 0, sizeof(int));
+            var dataPtr = setSlotNewForeign(this, slot, 0, sizeof(int));
             Marshal.WriteInt32(dataPtr, objectId);
         }
 
@@ -401,7 +410,7 @@ namespace IronWren
         /// <returns>The string contained in the slot.</returns>
         public string GetSlotString(int slot)
         {
-            var contentPtr = getSlotString(vm, slot);
+            var contentPtr = getSlotString(this, slot);
             return Marshal.PtrToStringAnsi(contentPtr);
         }
 
@@ -416,7 +425,7 @@ namespace IronWren
         /// <param name="text">The string to write to the slot.</param>
         public void SetSlotString(int slot, string text)
         {
-            setSlotString(vm, slot, text);
+            setSlotString(this, slot, text);
         }
 
         #endregion String
@@ -429,7 +438,7 @@ namespace IronWren
         /// <param name="slot">The slot to create the new empty list in.</param>
         public void SetSlotNewList(int slot)
         {
-            setSlotNewList(vm, slot);
+            setSlotNewList(this, slot);
         }
 
         /// <summary>
@@ -447,7 +456,7 @@ namespace IronWren
         /// <param name="elementSlot">The slot containing the element to insert.</param>
         public void InsertInList(int listSlot, int index, int elementSlot)
         {
-            insertInList(vm, listSlot, index, elementSlot);
+            insertInList(this, listSlot, index, elementSlot);
         }
 
         /// <summary>
@@ -459,7 +468,7 @@ namespace IronWren
         /// <param name="elementSlot">The slot to place the retrieved list element into.</param>
         public void GetListElement(int listSlot, int index, int elementSlot)
         {
-            getListElement(vm, listSlot, index, elementSlot);
+            getListElement(this, listSlot, index, elementSlot);
         }
 
         /// <summary>
@@ -471,7 +480,7 @@ namespace IronWren
         /// <param name="elementSlot">The slot containing the element to place into the list.</param>
         public void SetListElement(int listSlot, int index, int elementSlot)
         {
-            setListElement(vm, listSlot, index, elementSlot);
+            setListElement(this, listSlot, index, elementSlot);
         }
 
         /// <summary>
@@ -481,7 +490,7 @@ namespace IronWren
         /// <returns>The number of elements in the list.</returns>
         public int GetListCount(int slot)
         {
-            return getListCount(vm, slot);
+            return getListCount(this, slot);
         }
 
         #endregion List
@@ -494,7 +503,7 @@ namespace IronWren
         /// <param name="slot">The slot to place the new map into.</param>
         public void SetSlotNewMap(int slot)
         {
-            setSlotNewMap(vm, slot);
+            setSlotNewMap(this, slot);
         }
 
         /// <summary>
@@ -503,7 +512,7 @@ namespace IronWren
         /// <param name="slot">The slot containing the map.</param>
         public int GetMapCount(int slot)
         {
-            return getMapCount(vm, slot);
+            return getMapCount(this, slot);
         }
 
         /// <summary>
@@ -513,7 +522,7 @@ namespace IronWren
         /// <param name="keySlot">The slot containing the key to look for.</param>
         public bool GetMapContainsKey(int mapSlot, int keySlot)
         {
-            return getMapContainsKey(vm, mapSlot, keySlot);
+            return getMapContainsKey(this, mapSlot, keySlot);
         }
 
         /// <summary>
@@ -525,7 +534,7 @@ namespace IronWren
         /// <param name="valueSlot">The slot to store the found value in.</param>
         public void GetMapValue(int mapSlot, int keySlot, int valueSlot)
         {
-            getMapValue(vm, mapSlot, keySlot, valueSlot);
+            getMapValue(this, mapSlot, keySlot, valueSlot);
         }
 
         /// <summary>
@@ -537,7 +546,7 @@ namespace IronWren
         /// /// <param name="keySlot">The slot containing the value to use.</param>
         public void SetMapValue(int mapSlot, int keySlot, int valueSlot)
         {
-            setMapValue(vm, mapSlot, keySlot, valueSlot);
+            setMapValue(this, mapSlot, keySlot, valueSlot);
         }
 
         /// <summary>
@@ -550,7 +559,7 @@ namespace IronWren
         /// <param name="removedValueSlot">The slot to place the removed value in, or null if the key is not found.</param>
         public void RemoveMapValue(int mapSlot, int keySlot, int removedValueSlot)
         {
-            removeMapValue(vm, mapSlot, keySlot, removedValueSlot);
+            removeMapValue(this, mapSlot, keySlot, removedValueSlot);
         }
 
         #endregion Map
@@ -565,83 +574,83 @@ namespace IronWren
         private static extern int getVersionNumber();
 
         [DllImport(WrenLib, EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult interpret(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string source);
+        private static extern WrenInterpretResult interpret(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string source);
 
         #region Slot Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotType", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenType getSlotType(IntPtr vm, int slot);
+        private static extern WrenType getSlotType(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetVariable", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getVariable(IntPtr vm,
+        private static extern void getVariable(WrenVM vm,
             [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string name, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasVariable", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool hasVariable(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
+        private static extern bool hasVariable(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasModule", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool hasModule(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module);
+        private static extern bool hasModule(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNull", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNull(IntPtr vm, int slot);
+        private static extern void setSlotNull(WrenVM vm, int slot);
 
         #region Slot Count
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getSlotCount(IntPtr vm);
+        private static extern int getSlotCount(WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenEnsureSlots", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ensureSlots(IntPtr vm, int count);
+        private static extern void ensureSlots(WrenVM vm, int count);
 
         #endregion Slot Count
 
         #region Value
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotHandle(IntPtr vm, int slot);
+        private static extern IntPtr getSlotHandle(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotHandle(IntPtr vm, int slot, IntPtr handle);
+        private static extern void setSlotHandle(WrenVM vm, int slot, IntPtr wrenHandle);
 
         [DllImport(WrenLib, EntryPoint = "wrenReleaseHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void releaseHandle(IntPtr vm, IntPtr handle);
+        private static extern void releaseHandle(WrenVM vm, IntPtr wrenHandle);
 
         #endregion Value
 
         #region Bool
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotBool", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool getSlotBool(IntPtr vm, int slot);
+        private static extern bool getSlotBool(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotBool", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotBool(IntPtr vm, int slot, bool value);
+        private static extern void setSlotBool(WrenVM vm, int slot, bool value);
 
         #endregion Bool
 
         #region Bytes
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotBytes", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotBytes(IntPtr vm, int slot, [Out] out int length);
+        private static extern IntPtr getSlotBytes(WrenVM vm, int slot, [Out] out int length);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotBytes", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotBytes(IntPtr vm, int slot, IntPtr bytes, uint length);
+        private static extern void setSlotBytes(WrenVM vm, int slot, IntPtr bytes, uint length);
 
         #endregion Bytes
 
         #region Double
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotDouble", CallingConvention = CallingConvention.Cdecl)]
-        private static extern double getSlotDouble(IntPtr vm, int slot);
+        private static extern double getSlotDouble(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotDouble", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotDouble(IntPtr vm, int slot, double value);
+        private static extern void setSlotDouble(WrenVM vm, int slot, double value);
 
         #endregion Double
 
         #region Foreign
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotForeign", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotForeign(IntPtr vm, int slot);
+        private static extern IntPtr getSlotForeign(WrenVM vm, int slot);
 
         /// <summary>
         /// Creates a new instance of the foreign class stored in [classSlot] with the given amount of
@@ -654,64 +663,64 @@ namespace IronWren
         /// <para/>
         /// Returns a pointer to the foreign object's data.
         /// </summary>
-        /// <param name="vm">The vm.</param>
+        /// <param name="handle">The handle.</param>
         /// <param name="slot">The slot to create the new instance of the foreign class in.</param>
         /// <param name="classSlot"></param>
         /// <param name="size">The size of data in bytes.</param>
         /// <returns>A pointer to the foreign object's data.</returns>
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr setSlotNewForeign(IntPtr vm, int slot, int classSlot, uint size);
+        private static extern IntPtr setSlotNewForeign(WrenVM vm, int slot, int classSlot, uint size);
 
         #endregion Foreign
 
         #region String
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotString", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotString(IntPtr vm, int slot);
+        private static extern IntPtr getSlotString(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotString", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotString(IntPtr vm, int slot, [MarshalAs(UnmanagedType.LPStr), In] string text);
+        private static extern void setSlotString(WrenVM vm, int slot, [MarshalAs(UnmanagedType.LPStr), In] string text);
 
         #endregion String
 
         #region List
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewList", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNewList(IntPtr vm, int slot);
+        private static extern void setSlotNewList(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenInsertInList", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void insertInList(IntPtr vm, int listSlot, int index, int elementSlot);
+        private static extern void insertInList(WrenVM vm, int listSlot, int index, int elementSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getListCount(IntPtr vm, int slot);
+        private static extern int getListCount(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListElement", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getListElement(IntPtr vm, int listSlot, int index, int elementSlot);
+        private static extern void getListElement(WrenVM vm, int listSlot, int index, int elementSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetListElement", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setListElement(IntPtr vm, int listSlot, int index, int elementSlot);
+        private static extern void setListElement(WrenVM vm, int listSlot, int index, int elementSlot);
 
         #endregion List
 
         #region Map
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewMap", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNewMap(IntPtr vm, int slot);
+        private static extern void setSlotNewMap(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getMapCount(IntPtr vm, int slot);
+        private static extern int getMapCount(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapContainsKey", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool getMapContainsKey(IntPtr vm, int mapSlot, int keySlot);
+        private static extern bool getMapContainsKey(WrenVM vm, int mapSlot, int keySlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void getMapValue(WrenVM vm, int mapSlot, int keySlot, int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setMapValue(IntPtr vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void setMapValue(WrenVM vm, int mapSlot, int keySlot, int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenRemoveMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void removeMapValue(IntPtr vm, int mapSlot, int keySlot, int removedValueSlot);
+        private static extern void removeMapValue(WrenVM vm, int mapSlot, int keySlot, int removedValueSlot);
 
         #endregion Map
 
@@ -720,32 +729,32 @@ namespace IronWren
         #region Function Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenMakeCallHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr makeCallHandle(IntPtr vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
+        private static extern IntPtr makeCallHandle(WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
 
         [DllImport(WrenLib, EntryPoint = "wrenCall", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult call(IntPtr vm, IntPtr callHandle);
+        private static extern WrenInterpretResult call(WrenVM vm, IntPtr callHandle);
 
         #endregion Function Interactions
 
         #region VM Lifecycle
 
         [DllImport(WrenLib, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr newVM([In] ref WrenConfig.InternalConfig config);
+        private static extern IntPtr newVM([In] WrenConfig.InternalConfig config);
 
         [DllImport(WrenLib, EntryPoint = "wrenCollectGarbage", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void collectGarbage(IntPtr vm);
+        private static extern void collectGarbage(WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
         private static extern void freeVM(IntPtr vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenAbortFiber", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void abortFiber(IntPtr vm, int slot);
+        private static extern void abortFiber(WrenVM vm, int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetUserData", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getUserData(IntPtr vm);
+        private static extern IntPtr getUserData(WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetUserData", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setUserData(IntPtr vm, IntPtr userData);
+        private static extern void setUserData(WrenVM vm, IntPtr userData);
 
         #endregion VM Lifecycle
 
