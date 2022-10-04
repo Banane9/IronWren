@@ -30,7 +30,7 @@
 
             Assert.AreEqual("testing!", output[0]);
 
-            fnHandle.Release();
+            fnHandle.Dispose();
         }
 
         [TestMethod]
@@ -49,7 +49,7 @@
 
             Assert.AreEqual("test called!", output[0]);
 
-            fnHandle.Release();
+            fnHandle.Dispose();
         }
     }
 }

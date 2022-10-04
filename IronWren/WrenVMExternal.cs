@@ -68,7 +68,7 @@ namespace IronWren
         /// </summary>
         internal void ReleaseHandle(WrenHandle wrenHandle)
         {
-            releaseHandle(this, wrenHandle.HandlePtr);
+            releaseHandle(this, wrenHandle.DangerousGetHandle());
         }
 
         #region Function Interactions
@@ -89,7 +89,9 @@ namespace IronWren
         /// <returns>A handle to the function.</returns>
         public WrenFunctionHandle MakeCallHandle(string signature)
         {
-            return new WrenFunctionHandle(this, makeCallHandle(this, signature));
+            var handle = makeCallHandle(this, signature);
+            handle.SetVm(this);
+            return handle;
         }
 
         /// <summary>
@@ -106,7 +108,7 @@ namespace IronWren
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Call(WrenFunctionHandle wrenHandle)
         {
-            return call(this, wrenHandle.HandlePtr);
+            return call(this, wrenHandle);
         }
 
         #endregion Function Interactions
@@ -219,7 +221,9 @@ namespace IronWren
         /// <returns>A handle to the value in the slot.</returns>
         public WrenValueHandle GetSlotHandle(int slot)
         {
-            return new WrenValueHandle(this, getSlotHandle(this, slot));
+            var handle = getSlotHandle(this, slot);
+            handle.SetVm(this);
+            return handle;
         }
 
         /// <summary>
@@ -231,7 +235,7 @@ namespace IronWren
         /// <param name="handle">The value handle.</param>
         public void SetSlotHandle(int slot, WrenValueHandle wrenHandle)
         {
-            setSlotHandle(this, slot, wrenHandle.HandlePtr);
+            setSlotHandle(this, slot, wrenHandle);
         }
 
         #endregion Handle
@@ -607,10 +611,10 @@ namespace IronWren
         #region Value
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotHandle([In] WrenVM vm, [In] int slot);
+        private static extern WrenValueHandle getSlotHandle([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotHandle([In] WrenVM vm, [In] int slot, [In] IntPtr wrenHandle);
+        private static extern void setSlotHandle([In] WrenVM vm, [In] int slot, [In] WrenHandle wrenHandle);
 
         [DllImport(WrenLib, EntryPoint = "wrenReleaseHandle", CallingConvention = CallingConvention.Cdecl)]
         private static extern void releaseHandle([In] WrenVM vm, [In] IntPtr wrenHandle);
@@ -729,10 +733,10 @@ namespace IronWren
         #region Function Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenMakeCallHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr makeCallHandle([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
+        private static extern WrenFunctionHandle makeCallHandle([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
 
         [DllImport(WrenLib, EntryPoint = "wrenCall", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult call([In] WrenVM vm, [In] IntPtr callHandle);
+        private static extern WrenInterpretResult call([In] WrenVM vm, [In] WrenFunctionHandle callHandle);
 
         #endregion Function Interactions
 
