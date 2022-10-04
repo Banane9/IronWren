@@ -35,7 +35,10 @@ namespace IronWren
             Config = config;
             SetHandle(newVM(config.UseConfig()));
 
-            vms.Add(handle, new WeakReference<WrenVM>(this));
+            if (vms.TryGetValue(handle, out var vmWR) && vmWR.TryGetTarget(out var vm) && !vm.IsClosed)
+                throw new InvalidOperationException("How the hell did it recycle a still in use handle?!");
+
+            vms[handle] = new WeakReference<WrenVM>(this);
         }
 
         /// <summary>

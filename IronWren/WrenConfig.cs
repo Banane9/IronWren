@@ -13,9 +13,37 @@ namespace IronWren
     /// <summary>
     /// Represents the configuration used by the <see cref="WrenVM"/>.
     /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
     public class WrenConfig
     {
-        private readonly InternalConfig config = new InternalConfig();
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenReallocate reallocate;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenResolveModuleInternal resolveModule;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenLoadModuleInternal loadModule;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenBindForeignMethodInternal bindForeignMethod;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenBindForeignClassInternal bindForeignClass;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenWriteInternal write;
+
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        private readonly WrenErrorInternal error;
+
+        private uint initialHeapSize;
+
+        private uint minHeapSize;
+
+        private int heapGrowthPercent;
+
+        private readonly IntPtr userData;
 
         /// <summary>
         /// Gets whether this <see cref="WrenConfig"/> has been used to create a VM already.
@@ -29,7 +57,7 @@ namespace IronWren
         /// </summary>
         internal WrenReallocate Reallocate
         {
-            get { return config.Reallocate; }
+            get { return reallocate; }
         }
 
         /// <summary>
@@ -116,13 +144,13 @@ namespace IronWren
         /// </summary>
         public uint InitialHeapSize
         {
-            get { return config.InitialHeapSize; }
+            get { return initialHeapSize; }
             set
             {
                 if (Used)
                     throw new InvalidOperationException($"Can't change {nameof(InitialHeapSize)} after the config has been used!");
 
-                config.InitialHeapSize = value;
+                initialHeapSize = value;
             }
         }
 
@@ -142,13 +170,13 @@ namespace IronWren
         /// </summary>
         public uint MinHeapSize
         {
-            get { return config.MinHeapSize; }
+            get { return minHeapSize; }
             set
             {
                 if (Used)
                     throw new InvalidOperationException($"Can't change {nameof(MinHeapSize)} after the config has been used!");
 
-                config.MinHeapSize = value;
+                minHeapSize = value;
             }
         }
 
@@ -172,13 +200,13 @@ namespace IronWren
         /// </summary>
         public int HeapGrowthPercent
         {
-            get { return config.HeapGrowthPercent; }
+            get { return heapGrowthPercent; }
             set
             {
                 if (Used)
                     throw new InvalidOperationException($"Can't change {nameof(HeapGrowthPercent)} after the config has been used!");
 
-                config.HeapGrowthPercent = value;
+                heapGrowthPercent = value;
             }
         }
 
@@ -186,43 +214,10 @@ namespace IronWren
         /// Returns the internal config struct expected by Wren and marks this <see cref="WrenConfig"/> as used.
         /// </summary>
         /// <returns>The internal config struct expected by Wren.</returns>
-        internal InternalConfig UseConfig()
+        internal WrenConfig UseConfig()
         {
             Used = true;
-            return config;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal class InternalConfig
-        {
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenReallocate Reallocate;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenResolveModuleInternal ResolveModule;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenLoadModuleInternal LoadModule;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignMethodInternal BindForeignMethod;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenBindForeignClassInternal BindForeignClass;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenWriteInternal Write;
-
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public WrenErrorInternal Error;
-
-            public uint InitialHeapSize;
-
-            public uint MinHeapSize;
-
-            public int HeapGrowthPercent;
-
-            public IntPtr userData;
+            return this;
         }
 
         /// <summary>
@@ -230,17 +225,17 @@ namespace IronWren
         /// </summary>
         public WrenConfig()
         {
-            initConfiguration(out config);
+            initConfiguration(this);
 
-            config.ResolveModule = resolveModule;
-            config.LoadModule = loadModule;
-            config.BindForeignMethod = bindForeignMethod;
-            config.BindForeignClass = bindForeignClass;
-            config.Write = write;
-            config.Error = error;
+            resolveModule = resolveModuleImpl;
+            loadModule = loadModuleImpl;
+            bindForeignMethod = bindForeignMethodImpl;
+            bindForeignClass = bindForeignClassImpl;
+            write = writeImpl;
+            error = errorImpl;
         }
 
-        private string resolveModule(IntPtr vm, string importer, string name)
+        private string resolveModuleImpl(IntPtr vm, string importer, string name)
         {
             // if no ResolveModule subscriber resolves the name, return the input
             string result = name;
@@ -258,7 +253,7 @@ namespace IronWren
             return resolveResult;
         }
 
-        private WrenLoadModuleResultInternal loadModule(IntPtr vm, string name)
+        private WrenLoadModuleResultInternal loadModuleImpl(IntPtr vm, string name)
         {
             // Only one of the multiple possible LoadModule implementations must actually return the source for the module
             var externalResult = LoadModule?.GetInvocationList().Cast<WrenLoadModule>()
@@ -271,7 +266,7 @@ namespace IronWren
             return externalResult.GetStruct();
         }
 
-        private WrenForeignMethodInternal bindForeignMethod(IntPtr vmPtr, string module, string className, bool isStatic, string signature)
+        private WrenForeignMethodInternal bindForeignMethodImpl(IntPtr vmPtr, string module, string className, bool isStatic, string signature)
         {
             var vm = WrenVM.GetVM(vmPtr);
 
@@ -290,7 +285,7 @@ namespace IronWren
         private static Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal> classMethods =
             new Dictionary<WrenForeignClassMethods, WrenForeignClassMethodsInternal>();
 
-        private WrenForeignClassMethodsInternal bindForeignClass(IntPtr vm, string module, string className)
+        private WrenForeignClassMethodsInternal bindForeignClassImpl(IntPtr vm, string module, string className)
         {
             if (BindForeignClass == null)
                 return new WrenForeignClassMethodsInternal();
@@ -308,17 +303,17 @@ namespace IronWren
             return methods;
         }
 
-        private void write(IntPtr vm, string text)
+        private void writeImpl(IntPtr vm, string text)
         {
             Write?.Invoke(WrenVM.GetVM(vm), text);
         }
 
-        private void error(IntPtr vm, WrenErrorType type, string module, int line, string message)
+        private void errorImpl(IntPtr vm, WrenErrorType type, string module, int line, string message)
         {
             Error?.Invoke(WrenVM.GetVM(vm), type, module, line, message);
         }
 
         [DllImport(WrenVM.WrenLib, EntryPoint = "wrenInitConfiguration", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void initConfiguration([Out] out InternalConfig config);
+        private static extern void initConfiguration([Out] WrenConfig config);
     }
 }
