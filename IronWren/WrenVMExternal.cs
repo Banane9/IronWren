@@ -574,83 +574,83 @@ namespace IronWren
         private static extern int getVersionNumber();
 
         [DllImport(WrenLib, EntryPoint = "wrenInterpret", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult interpret(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string source);
+        private static extern WrenInterpretResult interpret([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string source);
 
         #region Slot Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotType", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenType getSlotType(WrenVM vm, int slot);
+        private static extern WrenType getSlotType([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetVariable", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getVariable(WrenVM vm,
-            [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string name, int slot);
+        private static extern void getVariable([In] WrenVM vm,
+            [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string name, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasVariable", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool hasVariable(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string name);
+        private static extern bool hasVariable([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string module, [MarshalAs(UnmanagedType.LPStr), In] string name);
 
         [DllImport(WrenLib, EntryPoint = "wrenHasModule", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool hasModule(WrenVM vm, [MarshalAs(UnmanagedType.LPStr)] string module);
+        private static extern bool hasModule([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string module);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNull", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNull(WrenVM vm, int slot);
+        private static extern void setSlotNull([In] WrenVM vm, [In] int slot);
 
         #region Slot Count
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getSlotCount(WrenVM vm);
+        private static extern int getSlotCount([In] WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenEnsureSlots", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ensureSlots(WrenVM vm, int count);
+        private static extern void ensureSlots([In] WrenVM vm, [In] int count);
 
         #endregion Slot Count
 
         #region Value
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotHandle(WrenVM vm, int slot);
+        private static extern IntPtr getSlotHandle([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotHandle(WrenVM vm, int slot, IntPtr wrenHandle);
+        private static extern void setSlotHandle([In] WrenVM vm, [In] int slot, [In] IntPtr wrenHandle);
 
         [DllImport(WrenLib, EntryPoint = "wrenReleaseHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void releaseHandle(WrenVM vm, IntPtr wrenHandle);
+        private static extern void releaseHandle([In] WrenVM vm, [In] IntPtr wrenHandle);
 
         #endregion Value
 
         #region Bool
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotBool", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool getSlotBool(WrenVM vm, int slot);
+        private static extern bool getSlotBool([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotBool", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotBool(WrenVM vm, int slot, bool value);
+        private static extern void setSlotBool([In] WrenVM vm, [In] int slot, [In] bool value);
 
         #endregion Bool
 
         #region Bytes
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotBytes", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotBytes(WrenVM vm, int slot, [Out] out int length);
+        private static extern IntPtr getSlotBytes([In] WrenVM vm, [In] int slot, [Out] out int length);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotBytes", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotBytes(WrenVM vm, int slot, IntPtr bytes, uint length);
+        private static extern void setSlotBytes([In] WrenVM vm, [In] int slot, [In] IntPtr bytes, [In] uint length);
 
         #endregion Bytes
 
         #region Double
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotDouble", CallingConvention = CallingConvention.Cdecl)]
-        private static extern double getSlotDouble(WrenVM vm, int slot);
+        private static extern double getSlotDouble([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotDouble", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotDouble(WrenVM vm, int slot, double value);
+        private static extern void setSlotDouble([In] WrenVM vm, [In] int slot, [In] double value);
 
         #endregion Double
 
         #region Foreign
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotForeign", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotForeign(WrenVM vm, int slot);
+        private static extern IntPtr getSlotForeign([In] WrenVM vm, [In] int slot);
 
         /// <summary>
         /// Creates a new instance of the foreign class stored in [classSlot] with the given amount of
@@ -669,58 +669,58 @@ namespace IronWren
         /// <param name="size">The size of data in bytes.</param>
         /// <returns>A pointer to the foreign object's data.</returns>
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr setSlotNewForeign(WrenVM vm, int slot, int classSlot, uint size);
+        private static extern IntPtr setSlotNewForeign([In] WrenVM vm, [In] int slot, [In] int classSlot, [In] uint size);
 
         #endregion Foreign
 
         #region String
 
         [DllImport(WrenLib, EntryPoint = "wrenGetSlotString", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getSlotString(WrenVM vm, int slot);
+        private static extern IntPtr getSlotString([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotString", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotString(WrenVM vm, int slot, [MarshalAs(UnmanagedType.LPStr), In] string text);
+        private static extern void setSlotString([In] WrenVM vm, [In] int slot, [MarshalAs(UnmanagedType.LPStr), In] string text);
 
         #endregion String
 
         #region List
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewList", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNewList(WrenVM vm, int slot);
+        private static extern void setSlotNewList([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenInsertInList", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void insertInList(WrenVM vm, int listSlot, int index, int elementSlot);
+        private static extern void insertInList([In] WrenVM vm, [In] int listSlot, [In] int index, [In] int elementSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getListCount(WrenVM vm, int slot);
+        private static extern int getListCount([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetListElement", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getListElement(WrenVM vm, int listSlot, int index, int elementSlot);
+        private static extern void getListElement([In] WrenVM vm, [In] int listSlot, [In] int index, [In] int elementSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetListElement", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setListElement(WrenVM vm, int listSlot, int index, int elementSlot);
+        private static extern void setListElement([In] WrenVM vm, [In] int listSlot, [In] int index, [In] int elementSlot);
 
         #endregion List
 
         #region Map
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewMap", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotNewMap(WrenVM vm, int slot);
+        private static extern void setSlotNewMap([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapCount", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int getMapCount(WrenVM vm, int slot);
+        private static extern int getMapCount([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapContainsKey", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool getMapContainsKey(WrenVM vm, int mapSlot, int keySlot);
+        private static extern bool getMapContainsKey([In] WrenVM vm, [In] int mapSlot, [In] int keySlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void getMapValue(WrenVM vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void getMapValue([In] WrenVM vm, [In] int mapSlot, [In] int keySlot, [In] int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setMapValue(WrenVM vm, int mapSlot, int keySlot, int valueSlot);
+        private static extern void setMapValue([In] WrenVM vm, [In] int mapSlot, [In] int keySlot, [In] int valueSlot);
 
         [DllImport(WrenLib, EntryPoint = "wrenRemoveMapValue", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void removeMapValue(WrenVM vm, int mapSlot, int keySlot, int removedValueSlot);
+        private static extern void removeMapValue([In] WrenVM vm, [In] int mapSlot, [In] int keySlot, [In] int removedValueSlot);
 
         #endregion Map
 
@@ -729,32 +729,32 @@ namespace IronWren
         #region Function Interactions
 
         [DllImport(WrenLib, EntryPoint = "wrenMakeCallHandle", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr makeCallHandle(WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
+        private static extern IntPtr makeCallHandle([In] WrenVM vm, [MarshalAs(UnmanagedType.LPStr), In] string signature);
 
         [DllImport(WrenLib, EntryPoint = "wrenCall", CallingConvention = CallingConvention.Cdecl)]
-        private static extern WrenInterpretResult call(WrenVM vm, IntPtr callHandle);
+        private static extern WrenInterpretResult call([In] WrenVM vm, [In] IntPtr callHandle);
 
         #endregion Function Interactions
 
         #region VM Lifecycle
 
         [DllImport(WrenLib, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr newVM([In] WrenConfig config);
+        private static extern IntPtr newVM(WrenConfig config);
 
         [DllImport(WrenLib, EntryPoint = "wrenCollectGarbage", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void collectGarbage(WrenVM vm);
+        private static extern void collectGarbage([In] WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenFreeVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void freeVM(IntPtr vm);
+        private static extern void freeVM([In] IntPtr vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenAbortFiber", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void abortFiber(WrenVM vm, int slot);
+        private static extern void abortFiber([In] WrenVM vm, [In] int slot);
 
         [DllImport(WrenLib, EntryPoint = "wrenGetUserData", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr getUserData(WrenVM vm);
+        private static extern IntPtr getUserData([In] WrenVM vm);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetUserData", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setUserData(WrenVM vm, IntPtr userData);
+        private static extern void setUserData([In] WrenVM vm, [In] IntPtr userData);
 
         #endregion VM Lifecycle
 
