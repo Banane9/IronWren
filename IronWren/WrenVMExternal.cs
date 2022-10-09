@@ -66,9 +66,9 @@ namespace IronWren
         /// <summary>
         /// Releases the handle and allows the GC to claim the memory.
         /// </summary>
-        internal void ReleaseHandle(WrenHandle wrenHandle)
+        internal void ReleaseHandle(IntPtr wrenHandle)
         {
-            releaseHandle(this, wrenHandle.DangerousGetHandle());
+            releaseHandle(this, wrenHandle);
         }
 
         #region Function Interactions
@@ -90,7 +90,7 @@ namespace IronWren
         public WrenFunctionHandle MakeCallHandle(string signature)
         {
             var handle = makeCallHandle(this, signature);
-            handle.SetVm(this);
+            handle.SetVM(this);
             return handle;
         }
 
@@ -222,7 +222,7 @@ namespace IronWren
         public WrenValueHandle GetSlotHandle(int slot)
         {
             var handle = getSlotHandle(this, slot);
-            handle.SetVm(this);
+            handle.SetVM(this);
             return handle;
         }
 

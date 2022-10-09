@@ -11,21 +11,20 @@ namespace IronWren
     {
         private WrenVM vm;
 
-        protected WrenHandle() : base(true)
-        {
-        }
+        internal WrenHandle()
+            : base(true)
+        { }
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        protected override bool ReleaseHandle()
-        {
-            Debug.Assert(vm != null);
-            vm.ReleaseHandle(this);
-            return true;
-        }
-
-        internal void SetVm(WrenVM vm)
+        internal void SetVM(WrenVM vm)
         {
             this.vm = vm;
+        }
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        protected override bool ReleaseHandle()
+        {
+            vm.ReleaseHandle(handle);
+            return true;
         }
     }
 }

@@ -7,6 +7,8 @@ namespace IronWren
     /// </summary>
     public sealed class WrenValueHandle : WrenHandle
     {
-        internal WrenValueHandle(): base() { }
+        internal WrenValueHandle()
+            : base()
+        { }
     }
 }
