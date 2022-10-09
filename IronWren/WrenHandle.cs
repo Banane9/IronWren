@@ -1,55 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Win32.SafeHandles;
+using System.Diagnostics;
+using System.Runtime.ConstrainedExecution;
 
 namespace IronWren
 {
     /// <summary>
     /// Represents a handle to something in a <see cref="WrenVM"/>.
     /// </summary>
-    public abstract class WrenHandle : IDisposable
+    public abstract class WrenHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        private readonly WeakReference<WrenVM> vmRef;
-        private bool released;
+        private WrenVM vm;
 
-        internal IntPtr HandlePtr { get; }
+        internal WrenHandle()
+            : base(true)
+        { }
 
-        internal WrenHandle(WrenVM vm, IntPtr handlePtr)
+        internal void SetVM(WrenVM vm)
         {
-            vmRef = new WeakReference<WrenVM>(vm);
-
-            HandlePtr = handlePtr;
+            this.vm = vm;
         }
 
-        /// <summary>
-        /// Releases the handle in the <see cref="WrenVM"/> that created it and allows the GC to claim the memory.
-        /// </summary>
-        ~WrenHandle()
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        protected override bool ReleaseHandle()
         {
-            Release();
-        }
-
-        /// <summary>
-        /// Releases the handle in the <see cref="WrenVM"/> that created it and allows the GC to claim the memory.
-        /// </summary>
-        public void Dispose()
-        {
-            Release();
-
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the handle in the <see cref="WrenVM"/> that created it and allows the GC to claim the memory.
-        /// </summary>
-        public void Release()
-        {
-            WrenVM vm;
-            if (released || !vmRef.TryGetTarget(out vm))
-                return;
-
-            vm.ReleaseHandle(this);
-            released = true;
+            vm.ReleaseHandle(handle);
+            return true;
         }
     }
 }

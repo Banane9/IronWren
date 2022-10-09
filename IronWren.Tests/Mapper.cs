@@ -17,6 +17,20 @@ namespace IronWren.Tests
         }
 
         [TestMethod]
+        public void ConcreteGenericClass()
+        {
+            vm.AutoMap(typeof(Generic<string>));
+
+            Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret(
+                "var type = GenericTest.genericType"));
+
+            vm.EnsureSlots(1);
+            vm.GetVariable(WrenVM.MainModule, "type", 0);
+
+            Assert.AreEqual("String", vm.GetSlotString(0));
+        }
+
+        [TestMethod]
         public void NormalClass()
         {
             vm.AutoMap<WrenVector>();
@@ -54,6 +68,13 @@ namespace IronWren.Tests
         {
             NormalClass();
             StaticClassInModule();
+        }
+
+        [WrenClass("GenericTest")]
+        private static class Generic<T>
+        {
+            [WrenCode]
+            private static string code = $"static genericType {{ \"{typeof(T).Name}\" }}";
         }
 
         [WrenClass("Math")]

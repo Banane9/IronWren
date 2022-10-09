@@ -48,11 +48,12 @@ namespace IronWren.AutoMapper
         {
             this.target = target.GetTypeInfo();
 
+            // Abstract + Sealed = Static
             if (this.target.IsAbstract && !this.target.IsSealed)
                 throw new ArgumentException("The target type can't be abstract!", nameof(target));
 
-            if (this.target.IsGenericType && this.target.GetGenericTypeDefinition() == this.target.AsType())
-                throw new ArgumentException("The target type can't be an undefined generic!", nameof(target));
+            if (this.target.ContainsGenericParameters)
+                throw new ArgumentException("The target type can't have remaining generic parameters!", nameof(target));
 
             getSlotForeign = Expression.Call(vmParam, genericGetSlotForeign.MakeGenericMethod(target), slot);
 

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
+// Stop CodeMaid from reorganizing the file
+#if DEBUG
+#endif
+
 namespace IronWren
 {
     #region WrenBindForeignClass
@@ -23,7 +27,7 @@ namespace IronWren
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate WrenForeignClassMethodsInternal WrenBindForeignClassInternal(
-        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module, [MarshalAs(UnmanagedType.LPStr)]string className);
+        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module, [MarshalAs(UnmanagedType.LPStr)] string className);
 
     #endregion WrenBindForeignClass
 
@@ -51,8 +55,8 @@ namespace IronWren
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.FunctionPtr)]
     internal delegate WrenForeignMethodInternal WrenBindForeignMethodInternal(
-        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string module,
-        [MarshalAs(UnmanagedType.LPStr)]string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)]string signature);
+        IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string module,
+        [MarshalAs(UnmanagedType.LPStr)] string className, bool isStatic, [MarshalAs(UnmanagedType.LPStr)] string signature);
 
     #endregion WrenBindForeignMethod
 
@@ -92,7 +96,7 @@ namespace IronWren
     /// Since Wren does not talk directly to the file system, it relies on the
     /// embedder to physically locate and read the source code for a module. The
     /// first time an import appears, Wren will call this and pass in the name of
-    /// the module being imported. The VM should return the soure code for that
+    /// the module being imported. The VM should return the source code for that
     /// module.
     /// <para/>
     /// This will only be called once for any given module name. Wren caches the
@@ -108,7 +112,12 @@ namespace IronWren
     public delegate WrenLoadModuleResult WrenLoadModule(WrenVM vm, string name);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate WrenLoadModuleResultInternal WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string name);
+    internal delegate WrenLoadModuleResultInternal WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string name);
+
+    public delegate void WrenLoadModuleCallback<T>(WrenVM vm, string name, WrenLoadModuleResult<T> result);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void WrenLoadModuleCallbackInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string name, WrenLoadModuleResultInternal result);
 
     /// <summary>
     /// Gives the host a chance to canonicalize the imported module name,
@@ -123,7 +132,8 @@ namespace IronWren
     public delegate string WrenResolveModule(WrenVM vm, string importer, string name);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate IntPtr WrenResolveModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string importer, [MarshalAs(UnmanagedType.LPStr)] string name);
+    [return: MarshalAs(UnmanagedType.LPStr)]
+    internal delegate string WrenResolveModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string importer, [MarshalAs(UnmanagedType.LPStr)] string name);
 
     #endregion WrenLoadModule
 
@@ -142,7 +152,7 @@ namespace IronWren
     /// <param name="module">The name of the module that the error occured in.</param>
     /// <param name="line">The line number of the error. Negative (-1) if not applicable.</param>
     /// <param name="message">The error's message.</param>
-    public delegate void WrenError(WrenVM vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)]string module, int line, [MarshalAs(UnmanagedType.LPStr)]string message);
+    public delegate void WrenError(WrenVM vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)] string module, int line, [MarshalAs(UnmanagedType.LPStr)] string message);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void WrenErrorInternal(IntPtr vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)] string module, int line, [MarshalAs(UnmanagedType.LPStr)] string message);
@@ -163,7 +173,7 @@ namespace IronWren
     public delegate void WrenWrite(WrenVM vm, string text);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void WrenWriteInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)]string text);
+    internal delegate void WrenWriteInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string text);
 
     #endregion WrenWrite
 }

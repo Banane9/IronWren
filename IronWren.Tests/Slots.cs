@@ -87,7 +87,7 @@
 
             Assert.AreEqual(9, vm.GetSlotDouble(1));
 
-            handle.Release();
+            //handle.Dispose();
         }
 
         [TestMethod]

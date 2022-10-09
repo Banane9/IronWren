@@ -44,7 +44,7 @@ namespace IronWren.AutoMapper
 
         /// <summary>
         /// Automatically maps the given types to make their marked interfaces accessible from Wren.
-        /// Places them into the <see cref="WrenVM.MainModule"/> as the generated code will be interpreted immediately.
+        /// Places them into the <see cref="WrenVM.MainModule"/> where the generated code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="targets">The types to map.</param>
@@ -55,7 +55,7 @@ namespace IronWren.AutoMapper
 
         /// <summary>
         /// Automatically maps the given types to make their marked interfaces accessible from Wren.
-        /// If the module name is the <see cref="WrenVM.MainModule"/>, the code will be interpreted immediately.
+        /// If the module name is <see cref="WrenVM.MainModule"/>, the code will be interpreted immediately.
         /// </summary>
         /// <param name="vm">The <see cref="WrenVM"/> to make the types available to.</param>
         /// <param name="moduleName">The name of the module to place the types into.</param>
@@ -66,7 +66,8 @@ namespace IronWren.AutoMapper
 
             if (moduleName == WrenVM.MainModule)
             {
-                var classes = mainModuleClasses.GetValue(vm, _ => null);
+                // Will never fail due to setup in checkInitialization
+                mainModuleClasses.TryGetValue(vm, out var classes);
 
                 foreach (var target in targets)
                 {
@@ -80,13 +81,11 @@ namespace IronWren.AutoMapper
                 return;
             }
 
-            var modules = generatedModules.GetValue(vm, _ => null);
+            // Will never fail due to setup in checkInitialization
+            generatedModules.TryGetValue(vm, out var modules);
 
-            ForeignModule module;
-            if (modules.ContainsKey(moduleName))
+            if (modules.TryGetValue(moduleName, out var module))
             {
-                module = modules[moduleName];
-
                 if (module.Used && TreatModificationAfterLoadAsError)
                     throw new LoadedModuleModifiedException(moduleName);
             }
@@ -102,8 +101,7 @@ namespace IronWren.AutoMapper
 
         private static void checkInitialization(WrenVM vm)
         {
-            Dictionary<string, ForeignModule> module;
-            if (generatedModules.TryGetValue(vm, out module))
+            if (generatedModules.TryGetValue(vm, out var module))
                 return;
 
             vm.Config.LoadModule += loadAutoMapperModule;
