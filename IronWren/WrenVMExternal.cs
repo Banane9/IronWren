@@ -743,7 +743,7 @@ namespace IronWren
         #region VM Lifecycle
 
         [DllImport(WrenLib, EntryPoint = "wrenNewVM", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr newVM(WrenConfig config);
+        private static extern IntPtr newVM(WrenUsedConfig config);
 
         [DllImport(WrenLib, EntryPoint = "wrenCollectGarbage", CallingConvention = CallingConvention.Cdecl)]
         private static extern void collectGarbage([In] WrenVM vm);

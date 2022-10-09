@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace IronWren
@@ -23,7 +24,7 @@ namespace IronWren
         /// <summary>
         /// Gets the config used for this VM.
         /// </summary>
-        public WrenConfig Config { get; }
+        public WrenUsedConfig Config { get; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenVM"/> class with the given config for the VM.
@@ -32,8 +33,8 @@ namespace IronWren
         public WrenVM(WrenConfig config)
             : base(true)
         {
-            Config = config;
-            SetHandle(newVM(config.UseConfig()));
+            Config = new WrenUsedConfig(config, this);
+            SetHandle(newVM(Config));
 
             if (vms.TryGetValue(handle, out var vmWR) && vmWR.TryGetTarget(out var vm) && !vm.IsClosed)
                 throw new InvalidOperationException("How the hell did it recycle a still in use handle?!");
@@ -74,6 +75,13 @@ namespace IronWren
             foreignMethods.Add(wrappedForeignMethod);
 
             return wrappedForeignMethod;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ensureCorrectVM(IntPtr vm)
+        {
+            if (vm != handle)
+                throw new InvalidOperationException("VM-specific method called from wrong native instance.");
         }
     }
 }
