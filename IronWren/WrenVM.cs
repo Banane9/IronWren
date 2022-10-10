@@ -37,7 +37,7 @@ namespace IronWren
             SetHandle(newVM(Config));
 
             if (vms.TryGetValue(handle, out var vmWR) && vmWR.TryGetTarget(out var vm) && !vm.IsClosed)
-                throw new InvalidOperationException("How the hell did it recycle a still in use handle?!");
+                ThrowHelper.ThrowInvalidOperationException("How the hell did it recycle a still in use handle?!");
 
             vms[handle] = new WeakReference<WrenVM>(this);
         }
@@ -57,13 +57,13 @@ namespace IronWren
         internal static WrenVM GetVM(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
-                throw new ArgumentException("Pointer can't be a null pointer!", nameof(ptr));
+                ThrowHelper.ThrowArgumentException("Pointer can't be a null pointer!", nameof(ptr));
 
             if (!vms.TryGetValue(ptr, out var wrVM))
-                throw new ArgumentException("No VM with that pointer found!", nameof(ptr));
+                ThrowHelper.ThrowArgumentException("No VM with that pointer found!", nameof(ptr));
 
             if (!wrVM.TryGetTarget(out var vm))
-                throw new Exception("The VM instance was garbage collected and still received a callback!");
+                ThrowHelper.ThrowInvalidOperationException("The VM instance was garbage collected and still received a callback!");
 
             return vm;
         }
@@ -81,7 +81,7 @@ namespace IronWren
         private void ensureCorrectVM(IntPtr vm)
         {
             if (vm != handle)
-                throw new InvalidOperationException("VM-specific method called from wrong native instance.");
+                ThrowHelper.ThrowInvalidOperationException("VM-specific method called from wrong native instance.");
         }
     }
 }

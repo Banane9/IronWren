@@ -176,7 +176,7 @@ namespace IronWren
         public void SetSlotNull(params int[] slots)
         {
             if (slots == null)
-                throw new ArgumentNullException(nameof(slots));
+                ThrowHelper.ThrowArgumentNullException(nameof(slots));
 
             foreach (var slot in slots)
                 setSlotNull(this, slot);
@@ -363,7 +363,7 @@ namespace IronWren
             var objectId = Marshal.ReadInt32(dataPtr);
 
             if (!foreignObjects.ContainsKey(objectId))
-                throw new KeyNotFoundException("No foreign object with that Id found!");
+                ThrowHelper.ThrowKeyNotFoundException("No foreign object with that Id found!");
 
             return foreignObjects[objectId];
         }
@@ -388,7 +388,7 @@ namespace IronWren
             var objectId = Marshal.ReadInt32(dataPtr);
 
             if (!foreignObjects.ContainsKey(objectId))
-                throw new KeyNotFoundException("No foreign object with that Id found!");
+                ThrowHelper.ThrowKeyNotFoundException("No foreign object with that Id found!");
 
             var foreignObject = foreignObjects[objectId];
 

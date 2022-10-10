@@ -87,7 +87,7 @@ namespace IronWren.AutoMapper
             if (modules.TryGetValue(moduleName, out var module))
             {
                 if (module.Used && TreatModificationAfterLoadAsError)
-                    throw new LoadedModuleModifiedException(moduleName);
+                    ThrowHelper.ThrowLoadedModuleModifiedException(moduleName);
             }
             else
             {

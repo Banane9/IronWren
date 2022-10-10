@@ -50,10 +50,10 @@ namespace IronWren.AutoMapper
 
             // Abstract + Sealed = Static
             if (this.target.IsAbstract && !this.target.IsSealed)
-                throw new ArgumentException("The target type can't be abstract!", nameof(target));
+                ThrowHelper.ThrowArgumentException("The target type can't be abstract!", nameof(target));
 
             if (this.target.ContainsGenericParameters)
-                throw new ArgumentException("The target type can't have remaining generic parameters!", nameof(target));
+                ThrowHelper.ThrowArgumentException("The target type can't have remaining generic parameters!", nameof(target));
 
             getSlotForeign = Expression.Call(vmParam, genericGetSlotForeign.MakeGenericMethod(target), slot);
 
@@ -79,7 +79,7 @@ namespace IronWren.AutoMapper
         private void addSignature(string signature, MethodInfo method)
         {
             if (functions.ContainsKey(signature))
-                throw new SignatureExistsException(signature, target.AsType());
+                ThrowHelper.ThrowSignatureExistsException(signature, target.AsType());
 
             functions.Add(signature, getInvoker(method));
         }
