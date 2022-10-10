@@ -298,7 +298,7 @@ namespace IronWren
         {
             var bytesPtr = GCHandle.Alloc(value, GCHandleType.Pinned);
 
-            setSlotBytes(this, slot, bytesPtr.AddrOfPinnedObject(), (uint)value.Length);
+            setSlotBytes(this, slot, bytesPtr.AddrOfPinnedObject(), (nuint)value.Length);
 
             bytesPtr.Free();
         }
@@ -637,7 +637,7 @@ namespace IronWren
         private static extern IntPtr getSlotBytes([In] WrenVM vm, [In] int slot, [Out] out int length);
 
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotBytes", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void setSlotBytes([In] WrenVM vm, [In] int slot, [In] IntPtr bytes, [In] uint length);
+        private static extern void setSlotBytes([In] WrenVM vm, [In] int slot, [In] IntPtr bytes, [In] nuint length);
 
         #endregion Bytes
 
@@ -673,7 +673,7 @@ namespace IronWren
         /// <param name="size">The size of data in bytes.</param>
         /// <returns>A pointer to the foreign object's data.</returns>
         [DllImport(WrenLib, EntryPoint = "wrenSetSlotNewForeign", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr setSlotNewForeign([In] WrenVM vm, [In] int slot, [In] int classSlot, [In] uint size);
+        private static extern IntPtr setSlotNewForeign([In] WrenVM vm, [In] int slot, [In] int classSlot, [In] nuint size);
 
         #endregion Foreign
 

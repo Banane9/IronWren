@@ -158,7 +158,7 @@ namespace IronWren
     internal delegate void WrenErrorInternal(IntPtr vm, WrenErrorType type, [MarshalAs(UnmanagedType.LPStr)] string module, int line, [MarshalAs(UnmanagedType.LPStr)] string message);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate IntPtr WrenReallocateInternal(IntPtr memory, uint size, IntPtr userData);
+    internal delegate IntPtr WrenReallocateInternal(IntPtr memory, nuint size, IntPtr userData);
 
     #region WrenWrite
 
