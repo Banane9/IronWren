@@ -9,8 +9,8 @@
         public Functions()
         {
             vm = new WrenVM();
-            vm.Config.Write += (vm, text) => output.Add(text);
-            vm.Config.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
+            vm.Write += (vm, text) => output.Add(text);
+            vm.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
         }
 
         [TestMethod]

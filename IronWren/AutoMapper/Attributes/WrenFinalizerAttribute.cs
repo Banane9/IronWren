@@ -25,7 +25,7 @@ namespace IronWren.AutoMapper
                 return null;
 
             if (finalizeMethod.ReturnType != typeof(void) || finalizeMethod.GetParameters().Length != 0)
-                throw new SignatureInvalidException(finalizeMethod.Name, type, typeof(WrenFinalizerAttribute));
+                ThrowHelper.ThrowSignatureInvalidException(finalizeMethod.Name, type, typeof(WrenFinalizerAttribute));
 
             // finalizeObj => ((TTarget)finalizeObj).[finalize]()
             return Expression.Lambda<WrenFinalizer>(

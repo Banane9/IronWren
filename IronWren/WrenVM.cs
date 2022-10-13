@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace IronWren
@@ -23,7 +24,7 @@ namespace IronWren
         /// <summary>
         /// Gets the config used for this VM.
         /// </summary>
-        public WrenConfig Config { get; }
+        public WrenUsedConfig Config { get; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="WrenVM"/> class with the given config for the VM.
@@ -32,11 +33,11 @@ namespace IronWren
         public WrenVM(WrenConfig config)
             : base(true)
         {
-            Config = config;
-            SetHandle(newVM(config.UseConfig()));
+            Config = new WrenUsedConfig(config, this);
+            SetHandle(newVM(Config));
 
             if (vms.TryGetValue(handle, out var vmWR) && vmWR.TryGetTarget(out var vm) && !vm.IsClosed)
-                throw new InvalidOperationException("How the hell did it recycle a still in use handle?!");
+                ThrowHelper.ThrowInvalidOperationException("How the hell did it recycle a still in use handle?!");
 
             vms[handle] = new WeakReference<WrenVM>(this);
         }
@@ -56,13 +57,13 @@ namespace IronWren
         internal static WrenVM GetVM(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
-                throw new ArgumentException("Pointer can't be a null pointer!", nameof(ptr));
+                ThrowHelper.ThrowArgumentException("Pointer can't be a null pointer!", nameof(ptr));
 
             if (!vms.TryGetValue(ptr, out var wrVM))
-                throw new ArgumentException("No VM with that pointer found!", nameof(ptr));
+                ThrowHelper.ThrowArgumentException("No VM with that pointer found!", nameof(ptr));
 
             if (!wrVM.TryGetTarget(out var vm))
-                throw new Exception("The VM instance was garbage collected and still received a callback!");
+                ThrowHelper.ThrowInvalidOperationException("The VM instance was garbage collected and still received a callback!");
 
             return vm;
         }
@@ -74,6 +75,13 @@ namespace IronWren
             foreignMethods.Add(wrappedForeignMethod);
 
             return wrappedForeignMethod;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ensureCorrectVM(IntPtr vm)
+        {
+            if (vm != handle)
+                ThrowHelper.ThrowInvalidOperationException("VM-specific method called from wrong native instance.");
         }
     }
 }

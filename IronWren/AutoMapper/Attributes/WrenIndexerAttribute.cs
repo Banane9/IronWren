@@ -32,10 +32,10 @@ namespace IronWren.AutoMapper
         public WrenIndexerAttribute(PropertyType type, params string[] arguments)
         {
             if (arguments == null || arguments.Length == 0)
-                throw new ArgumentException("Arguments may not be null or empty!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("Arguments may not be null or empty!", nameof(arguments));
 
             if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
-                throw new ArgumentException("None of the arguments may be null or whitespace!");
+                ThrowHelper.ThrowArgumentException("None of the arguments may be null or whitespace!");
 
             Type = type;
             Arguments = arguments;

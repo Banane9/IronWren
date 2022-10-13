@@ -25,7 +25,7 @@ namespace IronWren.AutoMapper
         public WrenClassAttribute(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name can't be null or whitespace!", nameof(name));
+                ThrowHelper.ThrowArgumentException("Name can't be null or whitespace!", nameof(name));
 
             Name = name;
         }

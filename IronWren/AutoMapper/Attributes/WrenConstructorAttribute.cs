@@ -44,7 +44,11 @@ namespace IronWren.AutoMapper
         public string Code
         {
             set { code = value; }
-            get { throw new NotSupportedException(); }
+            get
+            {
+                ThrowHelper.ThrowNotSupportedException();
+                return null;
+            }
         }
 
         /// <summary>
@@ -65,7 +69,7 @@ namespace IronWren.AutoMapper
             arguments = arguments ?? new string[0];
 
             if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
-                throw new ArgumentException("Argument names may not be null or whitespace!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("Argument names may not be null or whitespace!", nameof(arguments));
 
             Arguments = arguments;
         }
@@ -81,7 +85,7 @@ namespace IronWren.AutoMapper
 
             var parameters = constructor.Info.GetParameters();
             if (parameters.Length != 1 || parameters[0].ParameterType != typeof(WrenVM))
-                throw new SignatureInvalidException(constructor.Info.Name, type, typeof(WrenConstructorAttribute));
+                ThrowHelper.ThrowSignatureInvalidException(constructor.Info.Name, type, typeof(WrenConstructorAttribute));
 
             return constructor;
         }

@@ -32,7 +32,7 @@ namespace IronWren.AutoMapper
         public WrenMethodAttribute(string name, params string[] arguments)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name may not be null or whitespace!", nameof(name));
+                ThrowHelper.ThrowArgumentException("Name may not be null or whitespace!", nameof(name));
 
             Name = name;
             Arguments = arguments ?? new string[0];

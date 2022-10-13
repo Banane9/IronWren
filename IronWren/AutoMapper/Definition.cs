@@ -19,7 +19,7 @@ namespace IronWren.AutoMapper
         public static string MakeClass(TypeInfo @class, TypeInfo inherits = null)
         {
             if (@class == null)
-                throw new ArgumentNullException(nameof(@class));
+                ThrowHelper.ThrowArgumentNullException(nameof(@class));
 
             var classAttribute = @class.GetCustomAttribute<WrenClassAttribute>();
             var inheritsClassAttribute = inherits?.GetCustomAttribute<WrenClassAttribute>();
@@ -37,7 +37,7 @@ namespace IronWren.AutoMapper
         public static string MakeClass(bool isForeign, string name, string inherits = null)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name may not be null or whitespace!", nameof(name));
+                ThrowHelper.ThrowArgumentException("Name may not be null or whitespace!", nameof(name));
 
             return $"{(isForeign ? "foreign " : "")}class {name}{(inherits != null ? $" is {inherits}" : "")}";
         }
@@ -52,7 +52,7 @@ namespace IronWren.AutoMapper
             arguments = arguments ?? new string[0];
 
             if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
-                throw new ArgumentException("No argument may be null or whitespace!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("No argument may be null or whitespace!", nameof(arguments));
 
             return $"construct new({string.Join(", ", arguments)})";
         }
@@ -65,12 +65,12 @@ namespace IronWren.AutoMapper
         public static string MakeIndexer(MethodInfo indexer)
         {
             if (indexer == null)
-                throw new ArgumentNullException(nameof(indexer));
+                ThrowHelper.ThrowArgumentNullException(nameof(indexer));
 
             var propertyAttribute = indexer.GetCustomAttribute<WrenIndexerAttribute>();
 
             if (propertyAttribute == null)
-                throw new ArgumentException("Method must have a WrenIndexerAttribute!", nameof(indexer));
+                ThrowHelper.ThrowArgumentException("Method must have a WrenIndexerAttribute!", nameof(indexer));
 
             return MakeIndexer(true, indexer.IsStatic, propertyAttribute.Type, propertyAttribute.Arguments);
         }
@@ -86,13 +86,13 @@ namespace IronWren.AutoMapper
         public static string MakeIndexer(bool isForeign, bool isStatic, PropertyType type, params string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments));
+                ThrowHelper.ThrowArgumentNullException(nameof(arguments));
 
             if (arguments.Length == 0)
-                throw new ArgumentException("Indexers must have at least one argument!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("Indexers must have at least one argument!", nameof(arguments));
 
             if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
-                throw new ArgumentException("No argument may be null or whitespace!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("No argument may be null or whitespace!", nameof(arguments));
 
             if (type == PropertyType.Get)
                 return $"{(isForeign ? "foreign " : "")}{(isStatic ? "static " : "")}[{string.Join(", ", arguments)}]";
@@ -108,12 +108,12 @@ namespace IronWren.AutoMapper
         public static string MakeMethod(MethodInfo method)
         {
             if (method == null)
-                throw new ArgumentNullException(nameof(method));
+                ThrowHelper.ThrowArgumentNullException(nameof(method));
 
             var methodAttribute = method.GetCustomAttribute<WrenMethodAttribute>();
 
             if (methodAttribute == null)
-                throw new ArgumentException("Method must have a WrenMethodAttribute!");
+                ThrowHelper.ThrowArgumentException("Method must have a WrenMethodAttribute!");
 
             return MakeMethod(true, method.IsStatic, methodAttribute.Name, methodAttribute.Arguments);
         }
@@ -129,12 +129,12 @@ namespace IronWren.AutoMapper
         public static string MakeMethod(bool isForeign, bool isStatic, string name, params string[] arguments)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name may not be null or whitespace!", nameof(name));
+                ThrowHelper.ThrowArgumentException("Name may not be null or whitespace!", nameof(name));
 
             arguments = arguments ?? new string[0];
 
             if (!arguments.All(arg => !string.IsNullOrWhiteSpace(arg)))
-                throw new ArgumentException("No argument may be null or whitespace!", nameof(arguments));
+                ThrowHelper.ThrowArgumentException("No argument may be null or whitespace!", nameof(arguments));
 
             return $"{(isForeign ? "foreign " : "")}{(isStatic ? "static " : "")}{name}({string.Join(", ", arguments)})";
         }
@@ -147,12 +147,12 @@ namespace IronWren.AutoMapper
         public static string MakeProperty(MethodInfo property)
         {
             if (property == null)
-                throw new ArgumentNullException(nameof(property));
+                ThrowHelper.ThrowArgumentNullException(nameof(property));
 
             var propertyAttribute = property.GetCustomAttribute<WrenPropertyAttribute>();
 
             if (propertyAttribute == null)
-                throw new ArgumentException("Method must have a WrenPropertyAttribute!");
+                ThrowHelper.ThrowArgumentException("Method must have a WrenPropertyAttribute!");
 
             return MakeProperty(true, property.IsStatic, propertyAttribute.Type, propertyAttribute.Name);
         }
@@ -168,7 +168,7 @@ namespace IronWren.AutoMapper
         public static string MakeProperty(bool isForeign, bool isStatic, PropertyType type, string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name may not be null or whitespace!", nameof(name));
+                ThrowHelper.ThrowArgumentException("Name may not be null or whitespace!", nameof(name));
 
             if (type == PropertyType.Get)
                 return $"{(isForeign ? "foreign " : "")}{(isStatic ? "static " : "")}{name}";

@@ -87,7 +87,7 @@ namespace IronWren.AutoMapper
             if (modules.TryGetValue(moduleName, out var module))
             {
                 if (module.Used && TreatModificationAfterLoadAsError)
-                    throw new LoadedModuleModifiedException(moduleName);
+                    ThrowHelper.ThrowLoadedModuleModifiedException(moduleName);
             }
             else
             {
@@ -104,9 +104,9 @@ namespace IronWren.AutoMapper
             if (generatedModules.TryGetValue(vm, out var module))
                 return;
 
-            vm.Config.LoadModule += loadAutoMapperModule;
-            vm.Config.BindForeignMethod += bindAutoMapperMethod;
-            vm.Config.BindForeignClass += bindAutoMapperClass;
+            vm.LoadModule += loadAutoMapperModule;
+            vm.BindForeignMethod += bindAutoMapperMethod;
+            vm.BindForeignClass += bindAutoMapperClass;
 
             generatedModules.Add(vm, new Dictionary<string, ForeignModule>());
             mainModuleClasses.Add(vm, new Dictionary<string, ForeignClass>());

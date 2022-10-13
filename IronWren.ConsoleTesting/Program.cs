@@ -17,22 +17,21 @@ namespace IronWren.ConsoleTesting
 
         private static void Main(string[] args)
         {
-            var config = new WrenConfig();
-            config.Write += (vm, text) => Console.Write(text);
-            config.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
-
-            config.LoadModule += (vm, module) => new WrenLoadModuleResult { Source = $"System.print(\"Module [{module}] loaded!\")" };
-
-            config.BindForeignMethod += (vm, module, className, isStatic, signature) =>
+            using (var vm = new WrenVM())
             {
-                Console.WriteLine($"BindForeignMethod called: It's called {signature}, is part of {className} and is {(isStatic ? "static" : "not static")}.");
-                return (signature == "sayHi(_)" ? sayHi : (WrenForeignMethod)null);
-            };
+                vm.Write += (vm, text) => Console.Write(text);
+                vm.Error += (vm, type, module, line, message) => Console.WriteLine($"Error [{type}] in module [{module}] at line {line}:{Environment.NewLine}{message}");
 
-            config.BindForeignClass += (vm, module, className) => className == "Test" ? new WrenForeignClassMethods { Allocate = alloc } : null;
+                vm.LoadModule += (vm, module) => new WrenLoadModuleResult { Source = $"System.print(\"Module [{module}] loaded!\")" };
 
-            using (var vm = new WrenVM(config))
-            {
+                vm.BindForeignMethod += (vm, module, className, isStatic, signature) =>
+                {
+                    Console.WriteLine($"BindForeignMethod called: It's called {signature}, is part of {className} and is {(isStatic ? "static" : "not static")}.");
+                    return (signature == "sayHi(_)" ? sayHi : (WrenForeignMethod)null);
+                };
+
+                vm.BindForeignClass += (vm, module, className) => className == "Test" ? new WrenForeignClassMethods { Allocate = alloc } : null;
+
                 Console.WriteLine("Running Wren Version " + WrenVM.GetVersionNumber());
                 var result = vm.Interpret("System.print(\"Hi from Wren!\")");
 
