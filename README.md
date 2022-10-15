@@ -1,28 +1,25 @@
-IronWren [![Build status](https://ci.appveyor.com/api/projects/status/ue8l1ieifes4xkwq/branch/master?svg=true)](https://ci.appveyor.com/project/Banane9/ironwren/branch/master)
-=========================
+# IronWren [![Build status](https://ci.appveyor.com/api/projects/status/ue8l1ieifes4xkwq/branch/master?svg=true)](https://ci.appveyor.com/project/Banane9/ironwren/branch/master)
 
 .NET integration for the scripting language [Wren](https://github.com/munificent/wren).
 
 Available on NuGet [here](https://www.nuget.org/packages/IronWren/)!
 
-###Features###
+## Features
 
 - [x] C# style wrapper around Wren's C-API.
 - [x] No `IntPtr`s get exposed, making the value- and function-handles typesafe.
 - [x] Ability to automatically generate Wren integration code for classes defined in C#.
 
-###Usage###
+## Usage
 
 Basic usage (more extensively shown in [IronWren.ConsoleTesting/Program.cs](https://github.com/Banane9/IronWren/blob/master/IronWren.ConsoleTesting/Program.cs)):
 
 ``` CSharp
 private static void Main(string[] args)
 {
-    var config = new WrenConfig();
-    config.Write += (v, text) => Console.Write(text);
-    
-    using (var vm = new WrenVM(config))
+    using (var vm = new WrenVM())
     {
+        vm.Write += (v, text) => Console.Write(text);
         var result = vm.Interpret("System.print(\"Hi from Wren!\")");
     }
     
@@ -30,7 +27,7 @@ private static void Main(string[] args)
 }
 ```
 
-#####AutoMapper#####
+## AutoMapper
 
 The AutoMapper provides the ability to easily create a Wren class from a C# type, only requiring it to be decorated with the right Attributes.
 
