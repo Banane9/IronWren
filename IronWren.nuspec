@@ -25,8 +25,8 @@ The Native folder content has to be set to copy manually.</description>
         <tags>wren, integration, script, scripting, language, pcl, portable, library, wrapper, game</tags>
     </metadata>
     <files>
-        <file src="IronWren\bin\Release\Native\wren.dll" target="content\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\Native\wren.dll" />
-        <file src="IronWren\bin\Release\IronWren.dll" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.dll" />
-        <file src="IronWren\bin\Release\IronWren.xml" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.xml" />
+        <file src="IronWren\bin\Release\netstandard2.0\Native\wren.dll" target="content\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\Native\wren.dll" />
+        <file src="IronWren\bin\Release\netstandard2.0\IronWren.dll" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.dll" />
+        <file src="IronWren\bin\Release\netstandard2.0\IronWren.xml" target="lib\portable-net45+win+wpa81+MonoAndroid10+xamarinios10+MonoTouch10\IronWren.xml" />
     </files>
 </package>
