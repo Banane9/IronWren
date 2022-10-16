@@ -9,7 +9,7 @@
     <Copyright>Copyright © Banane9 2016</Copyright>
     <Description>C#/.NET integration for the scripting language Wren.</Description>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <PackageId>ClassLibDotNetStandard</PackageId>
+    <PackageId>IronWren</PackageId>
     <Authors>Banane9</Authors>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>http://github.com/Banane9/IronWren</PackageProjectUrl>
