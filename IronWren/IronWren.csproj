@@ -11,7 +11,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageId>ClassLibDotNetStandard</PackageId>
     <Authors>Banane9</Authors>
-    <PackageLicenseUrl>https://github.com/Banane9/IronWren/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>http://github.com/Banane9/IronWren</PackageProjectUrl>
     <PackageIconUrl>http://banane9.github.io/favicon.ico</PackageIconUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
