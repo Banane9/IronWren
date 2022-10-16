@@ -17,6 +17,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 	<PackageReleaseNotes>WrenVM instances will not be kept alive anymore after the user code doesn't have any more references to it.</PackageReleaseNotes>
     <PackageTags>wren, integration, script, scripting, language, pcl, portable, library, wrapper, game</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   
