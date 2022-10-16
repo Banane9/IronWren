@@ -20,6 +20,7 @@ namespace IronWren
             this.vm = vm;
         }
 
+        /// <inheritdoc/>
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         protected override bool ReleaseHandle()
         {

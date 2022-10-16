@@ -28,8 +28,14 @@ namespace IronWren
         }
     }
 
+    /// <summary>
+    /// The result of wren load module
+    /// </summary>
     public class WrenLoadModuleResult
     {
+        /// <summary>
+        /// The source code for the module, or NULL if the module is not found.
+        /// </summary>
         public string Source { get; set; }
 
         internal virtual WrenLoadModuleResultInternal GetStruct()
@@ -38,10 +44,19 @@ namespace IronWren
         }
     }
 
+    /// <summary>
+    /// The result of wren load module
+    /// </summary>
     public class WrenLoadModuleResult<T> : WrenLoadModuleResult
     {
+        /// <summary>
+        /// User data
+        /// </summary>
         public T UserData { get; set; }
 
+        /// <summary>
+        /// An optional callback that will be called once Wren is done with the result.
+        /// </summary>
         public WrenLoadModuleCallback<T> OnComplete { get; set; }
 
         internal override WrenLoadModuleResultInternal GetStruct()

@@ -114,6 +114,13 @@ namespace IronWren
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate WrenLoadModuleResultInternal WrenLoadModuleInternal(IntPtr vm, [MarshalAs(UnmanagedType.LPStr)] string name);
 
+    /// <summary>
+    /// An optional callback that will be called once Wren is done with the result.
+    /// </summary>
+    /// <typeparam name="T">The user data type</typeparam>
+    /// <param name="vm">The instance of the VM that is calling the method.</param>
+    /// <param name="name">The name of the module that was loaded.</param>
+    /// <param name="result">The load module result this callback is a part of.</param>
     public delegate void WrenLoadModuleCallback<T>(WrenVM vm, string name, WrenLoadModuleResult<T> result);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -148,6 +155,7 @@ namespace IronWren
     /// After that, a series of <see cref="WrenErrorType.StackTrace"/> calls are made for each line in the stack trace.
     /// Each of those has the module and line where the method or function is defined and [message] is the name of the method or function.
     /// </summary>
+    /// <param name="vm">The instance of the VM that is calling the method.</param>
     /// <param name="type">The type of error being reported.</param>
     /// <param name="module">The name of the module that the error occured in.</param>
     /// <param name="line">The line number of the error. Negative (-1) if not applicable.</param>

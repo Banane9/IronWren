@@ -16,6 +16,7 @@ namespace IronWren
         internal const string WrenLib = "Native/wren";
 #endif
 
+        /// <inheritdoc/>
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         protected override bool ReleaseHandle()
         {
@@ -38,6 +39,7 @@ namespace IronWren
         /// <summary>
         /// Runs the given string of Wren source code in a new fiber in the VM.
         /// </summary>
+        /// <param name="module">The module in which to interpret the source code.</param>
         /// <param name="source">The Wren source code to run.</param>
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Interpret(string module, string source)
@@ -80,7 +82,7 @@ namespace IronWren
         /// This handle can be used repeatedly to directly invoke that method from
         /// code using <see cref="Call(WrenFunctionHandle)"/>.
         /// <para/>
-        /// When you are done with this handle, it must be released using <see cref="WrenHandle.Release"/>.
+        /// When you are done with this handle, it must be released using <see cref="WrenHandle.ReleaseHandle"/>.
         /// </summary>
         /// <param name="signature">
         /// The signature of the method. It has to include the braces and an underscore for each argument.
@@ -104,7 +106,7 @@ namespace IronWren
         /// <para/>
         /// After this returns, you can access the return value from slot 0 on the stack.
         /// </summary>
-        /// <param name="handle">The call handle of the function.</param>
+        /// <param name="wrenHandle">The call handle of the function.</param>
         /// <returns>The status of the interpretion.</returns>
         public WrenInterpretResult Call(WrenFunctionHandle wrenHandle)
         {
@@ -215,7 +217,7 @@ namespace IronWren
         /// Creates a handle for the value stored in the given slot.
         /// <para/>
         /// This will prevent the object that is referred to from being garbage collected
-        /// until the handle is released by calling <see cref="WrenHandle.Release"/>.
+        /// until the handle is released by calling <see cref="WrenHandle.ReleaseHandle"/>.
         /// </summary>
         /// <param name="slot">The slot containing the value to create a handle for.</param>
         /// <returns>A handle to the value in the slot.</returns>
@@ -229,10 +231,10 @@ namespace IronWren
         /// <summary>
         /// Stores the value captured by the given value handle in the given slot.
         /// <para/>
-        /// This does not release the handle for the value. You must call <see cref="WrenHandle.Release"/> to do so.
+        /// This does not release the handle for the value. You must call <see cref="WrenHandle.ReleaseHandle"/> to do so.
         /// </summary>
         /// <param name="slot">The slot to write the value captured by the value handle to.</param>
-        /// <param name="handle">The value handle.</param>
+        /// <param name="wrenHandle">The value handle.</param>
         public void SetSlotHandle(int slot, WrenValueHandle wrenHandle)
         {
             setSlotHandle(this, slot, wrenHandle);
@@ -547,7 +549,7 @@ namespace IronWren
         /// </summary>
         /// <param name="mapSlot">The slot containing the map.</param>
         /// <param name="keySlot">The slot containing the key to use.</param>
-        /// /// <param name="keySlot">The slot containing the value to use.</param>
+        /// <param name="valueSlot">The slot containing the value to use.</param>
         public void SetMapValue(int mapSlot, int keySlot, int valueSlot)
         {
             setMapValue(this, mapSlot, keySlot, valueSlot);
@@ -667,7 +669,7 @@ namespace IronWren
         /// <para/>
         /// Returns a pointer to the foreign object's data.
         /// </summary>
-        /// <param name="handle">The handle.</param>
+        /// <param name="vm">The vm.</param>
         /// <param name="slot">The slot to create the new instance of the foreign class in.</param>
         /// <param name="classSlot"></param>
         /// <param name="size">The size of data in bytes.</param>
