@@ -9,6 +9,15 @@
     <Copyright>Copyright © Banane9 2016</Copyright>
     <Description>C#/.NET integration for the scripting language Wren.</Description>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageId>ClassLibDotNetStandard</PackageId>
+    <Authors>Banane9</Authors>
+    <PackageLicenseUrl>https://github.com/Banane9/IronWren/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>http://github.com/Banane9/IronWren</PackageProjectUrl>
+    <PackageIconUrl>http://banane9.github.io/favicon.ico</PackageIconUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<PackageReleaseNotes>WrenVM instances will not be kept alive anymore after the user code doesn't have any more references to it.</PackageReleaseNotes>
+    <PackageTags>wren, integration, script, scripting, language, pcl, portable, library, wrapper, game</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   
   <ItemGroup>
