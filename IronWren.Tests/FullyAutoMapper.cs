@@ -35,6 +35,16 @@ public class FullyAutoMapperTests
     }
 
     [TestMethod]
+    public void InstanceIndex()
+    {
+        vm.FullyAutoMap<MyList>();
+
+        Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret("var lst = MyList.new()\nlst.add(7)\nlst.add(8)\nlst.add(9)\nlst[1] = 10\nSystem.print(\"MyList (%(lst[0]), %(lst[1]), %(lst[2]))\")"));
+        Assert.AreEqual("MyList (7, 10, 9)", output[0]);
+        output.Clear();
+    }
+
+    [TestMethod]
     public void StaticClassInModule()
     {
         vm.FullyAutoMap("math", typeof(Math));
@@ -82,4 +92,27 @@ public class FullyAutoMapperTests
             Y += other.Y;
         }
     }
+
+    private class MyList
+    {
+        private readonly List<int> _list;
+
+        public MyList()
+        {
+            _list = new List<int>();
+        }
+
+        public int this[int index]
+        {
+            get => _list[index];
+            set => _list[index] = value;
+        }
+
+        public void Add(int item)
+        {
+            _list.Add(item);
+        }
+    }
+
+
 }
