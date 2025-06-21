@@ -1,9 +1,185 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 namespace IronWren.FullyAutoMapper
 {
     public static class SlotExtensions
     {
+
+        private static Expression SetSlotNullable(ParameterExpression vm, Expression getterExpr, ParameterExpression getterResult, Expression ifFalse)
+        {
+            return Expression.Block(
+                variables: [getterResult],
+                Expression.Assign(getterResult, getterExpr),
+                Expression.IfThenElse(
+                    test: Expression.Equal(getterResult, Expression.Constant(null)),
+                    ifTrue: Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.SetSlotNull),
+                        null,
+                        Expression.Constant(new int[] { 0 })
+                        ),
+                    ifFalse: ifFalse
+                    ));
+        }
+
+        private static Expression GetSlotNullable(ParameterExpression vm, ConstantExpression slotExpr, Expression ifFalse)
+        {
+            var slotTypeVAr = Expression.Variable(typeof(WrenType), "slotType");
+            return Expression.Condition(
+                    test: Expression.Equal(
+                        Expression.Call(vm, methodName: nameof(WrenVM.GetSlotType), null, slotExpr),
+                        Expression.Constant(WrenType.Null)),
+                    ifTrue: Expression.Constant(null),
+                    ifFalse: ifFalse
+                    );
+        }
+
+        public static Expression SetSlotExpression(Type methodReturnType, ParameterExpression vm, Expression getterExpr)
+        {
+            Expression func;
+            if (methodReturnType == typeof(double)) //double
+            {
+                func = Expression.Call(
+                    instance: vm,
+                    methodName: nameof(WrenVM.SetSlotDouble),
+                    null,
+                    Expression.Constant(0), getterExpr
+                    );
+            }
+            else if (methodReturnType == typeof(int) 
+                  || methodReturnType == typeof(sbyte)
+                  || methodReturnType == typeof(byte)
+                  || methodReturnType == typeof(short)
+                  || methodReturnType == typeof(ushort)
+                  || methodReturnType == typeof(uint)
+                  || methodReturnType == typeof(long)
+                  || methodReturnType == typeof(ulong)
+                  || methodReturnType == typeof(float)
+                  || methodReturnType == typeof(decimal)
+                  )
+            {
+                // Castable to double
+                func = Expression.Call(
+                    instance: vm,
+                    methodName: nameof(WrenVM.SetSlotDouble),
+                    null,
+                    Expression.Constant(0), Expression.Convert(getterExpr, typeof(double))
+                    );
+            }
+            else if (methodReturnType == typeof(bool))
+            {
+                func = Expression.Call(
+                    instance: vm,
+                    methodName: nameof(WrenVM.SetSlotBool),
+                    null,
+                    Expression.Constant(0), getterExpr
+                    );
+            }
+            else if (methodReturnType == typeof(string))
+            {
+                var getterResult = Expression.Variable(typeof(string), "getterResult");
+                func = SetSlotNullable(vm, getterExpr, getterResult,
+                    ifFalse: Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.SetSlotString),
+                        null,
+                        Expression.Constant(0), getterResult
+                        ));
+            }
+            else if (methodReturnType == typeof(byte[]))
+            {
+                var getterResult = Expression.Variable(typeof(byte[]), "getterResult");
+                func = SetSlotNullable(vm, getterExpr, getterResult,
+                    ifFalse: Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.SetSlotBytes),
+                        null,
+                        Expression.Constant(0), getterResult
+                        ));
+            }
+            else if (methodReturnType.IsValueType)
+            {
+                func = Expression.Block(
+                    // It would be better to keep handles to defined types and use SetSlotHandle?
+                    Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.GetVariable),
+                        null,
+                        Expression.Constant(WrenVM.MainModule), Expression.Constant(methodReturnType.Name), Expression.Constant(0)
+                        ),
+                    Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.SetSlotNewForeign),
+                        null,
+                        Expression.Constant(0), getterExpr
+                    )
+                );
+            }
+            else // Nullable foreign
+            {
+                var getterResult = Expression.Variable(typeof(object), "getterResult");
+                func = SetSlotNullable(vm, getterExpr, getterResult,
+                    ifFalse: Expression.Block(
+                        // It would be better to keep handles to defined types and use SetSlotHandle?
+                        Expression.Call(
+                            instance: vm,
+                            methodName: nameof(WrenVM.GetVariable),
+                            null,
+                            Expression.Constant(WrenVM.MainModule), Expression.Constant(methodReturnType.Name), Expression.Constant(0)
+                            ),
+                        Expression.Call(
+                            instance: vm,
+                            methodName: nameof(WrenVM.SetSlotNewForeign),
+                            null,
+                            Expression.Constant(0), getterResult
+                        )
+                    ));
+            }
+            return func;
+        }
+
+        public static Expression GetSlotExpression(ParameterExpression vm, int slot, Type parameterType)
+        {
+            var slotExpr = Expression.Constant(slot);
+            // TODO: maybe add GetSlotType and check to ensure it matches?
+            if (parameterType == typeof(bool))
+            {
+                return Expression.Call(vm, methodName: nameof(WrenVM.GetSlotBool), null, slotExpr);
+            }
+            else if (parameterType == typeof(double))
+            {
+                return Expression.Call(vm, methodName: nameof(WrenVM.GetSlotDouble), null, slotExpr);
+            }
+            else if (parameterType == typeof(int))
+            {
+                return Expression.Convert(
+                    Expression.Call(vm, nameof(WrenVM.GetSlotDouble), null, slotExpr),
+                    parameterType
+                        );
+            }
+            else if (parameterType == typeof(string))
+            {
+                return GetSlotNullable(vm, slotExpr,
+                    ifFalse: Expression.Call(vm, nameof(WrenVM.GetSlotDouble), null, slotExpr));
+            }
+            else if (parameterType == typeof(byte[]))
+            {
+                return GetSlotNullable(vm, slotExpr,
+                    ifFalse: Expression.Call(vm, nameof(WrenVM.GetSlotBytes), null, slotExpr));
+            }
+            else if (parameterType.IsValueType)
+            {
+                return Expression.Call(vm, nameof(WrenVM.GetSlotForeign), null, slotExpr);
+            }
+            else
+            {
+                return GetSlotNullable(vm, slotExpr,
+                    ifFalse: Expression.Call(vm, nameof(WrenVM.GetSlotForeign), null, slotExpr)
+                    );
+            }
+        }
+
         public static void SetSlotValue(WrenVM vm, int slot, object obj)
         {
             switch (obj)

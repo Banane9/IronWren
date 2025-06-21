@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Security;
 using System.Reflection;
 using System.Text;
 
@@ -122,9 +123,11 @@ namespace IronWren.FullyAutoMapper
             return sourceBuilder.ToString();
         }
 
-        private WrenForeignMethod getInvoker(MethodInfo method)
+        /// <summary>
+        /// Get delegate to invoke method using reflection
+        /// </summary>
+        private WrenForeignMethod getInvokerOld(MethodInfo method)
         {
-            // TODO: Optimise with Compiled Expressions
             return new WrenForeignMethod(vm =>
             {
                 var prms = method.GetParameters();
@@ -138,6 +141,64 @@ namespace IronWren.FullyAutoMapper
                 var result = method.Invoke(caller, args);
                 SlotExtensions.SetSlotValue(vm, 0, result);
             });
+        }
+
+        /// <summary>
+        /// Get delegate to invoke method by compiling code using linq expression trees
+        /// </summary>
+        private WrenForeignMethod getInvoker(MethodInfo method)
+        {
+            // TODO: account for properties and indexers
+            // TODO: test performance. How much faster is this to run after compilation, how much time is spent compiling,
+            //       cost benefit assesment, should we provide option to user to choose which getInvoker strategy to use?
+            var prms = method.GetParameters();
+
+            ParameterExpression vm = Expression.Parameter(typeof(WrenVM), "vm");
+
+            Expression getterExpr;
+            if (method.IsStatic)
+            {
+                if (prms.Length == 0)
+                {
+                    getterExpr = Expression.Call(method);
+                }
+                else
+                {
+                    var argExprs = new Expression[prms.Length];
+                    for (int i = 0; i < prms.Length; i++)
+                    {
+                        var prm = prms[i];
+                        argExprs[i] = SlotExtensions.GetSlotExpression(vm, i + 1, prm.ParameterType);
+                    }
+                    getterExpr = Expression.Call(method, arguments: argExprs);
+                }
+                
+            }
+            else 
+            {
+                var objExpression = Expression.Call(vm, methodName: nameof(WrenVM.GetSlotForeign), null, Expression.Constant(0));
+                var typedObjExpr = Expression.Convert(objExpression, method.DeclaringType);
+                if (prms.Length == 0)
+                {
+                    getterExpr = Expression.Call(typedObjExpr, method);
+                }
+                else
+                {
+                    var argExprs = new Expression[prms.Length];
+                    for (int i = 0; i < prms.Length; i++)
+                    {
+                        var prm = prms[i];
+                        argExprs[i] = SlotExtensions.GetSlotExpression(vm, i + 1, prm.ParameterType);
+                    }
+                    getterExpr = Expression.Call(typedObjExpr, method, arguments: argExprs);
+                }
+            }
+
+            var func = SlotExtensions.SetSlotExpression(method.ReturnType, vm, getterExpr);
+
+            var result = Expression.Lambda<WrenForeignMethod>(func, vm);
+
+            return result.Compile();
         }
 
         private void makeConstructors(StringBuilder sourceBuilder)

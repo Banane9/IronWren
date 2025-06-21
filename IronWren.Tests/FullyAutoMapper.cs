@@ -59,6 +59,58 @@ public class FullyAutoMapperTests
         Assert.AreEqual(System.Math.Sin(System.Math.PI), vm.GetSlotDouble(0), 1e-6);
     }
 
+    [TestMethod]
+    public void StaticClassMethodDouble()
+    {
+        vm.FullyAutoMap("math", typeof(SupaMath));
+
+        Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret(
+            "import \"math\" for SupaMath\n" +
+            "var sin = SupaMath.pi()\n"));
+
+        vm.EnsureSlots(1);
+        vm.GetVariable(WrenVM.MainModule, "sin", 0);
+
+        Assert.AreEqual(System.Math.PI, vm.GetSlotDouble(0), 1e-6);
+    }
+
+    [TestMethod]
+    public void StaticClassMethodInt()
+    {
+        vm.FullyAutoMap("math", typeof(SupaMath));
+
+        Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret(
+            "import \"math\" for SupaMath\n" +
+            "var sin = SupaMath.fifty()\n"));
+
+        vm.EnsureSlots(1);
+        vm.GetVariable(WrenVM.MainModule, "sin", 0);
+
+        Assert.AreEqual(50, vm.GetSlotDouble(0), 1e-6);
+    }
+
+    [TestMethod]
+    public void StaticClassMethodString()
+    {
+        vm.FullyAutoMap("math", typeof(SupaMath));
+
+        Assert.AreEqual(WrenInterpretResult.Success, vm.Interpret(
+            "import \"math\" for SupaMath\n" +
+            "var sin = SupaMath.fruit()\n"));
+
+        vm.EnsureSlots(1);
+        vm.GetVariable(WrenVM.MainModule, "sin", 0);
+
+        Assert.AreEqual("Banana", vm.GetSlotString(0));
+    }
+
+    private static class SupaMath
+    {
+        public static double Pi() => System.Math.PI;
+        public static int Fifty() => 50;
+        public static string Fruit() => "Banana";
+    }
+
     private static class Math
     {
         public static double Pi => System.Math.PI;
