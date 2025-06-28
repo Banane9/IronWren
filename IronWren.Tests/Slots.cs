@@ -11,7 +11,7 @@
         }
 
         [TestMethod]
-        public void Bool()
+        public void BoolTrue()
         {
             vm.EnsureSlots(1);
             vm.SetSlotNull(0);
@@ -19,6 +19,17 @@
             vm.SetSlotBool(0, true);
 
             Assert.IsTrue(vm.GetSlotBool(0));
+        }
+
+        [TestMethod]
+        public void BoolFalse()
+        {
+            vm.EnsureSlots(1);
+            vm.SetSlotNull(0);
+
+            vm.SetSlotBool(0, false);
+
+            Assert.IsFalse(vm.GetSlotBool(0));
         }
 
         [TestMethod]
