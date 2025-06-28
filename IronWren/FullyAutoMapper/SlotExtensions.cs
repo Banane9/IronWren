@@ -30,7 +30,7 @@ namespace IronWren.FullyAutoMapper
                     test: Expression.Equal(
                         Expression.Call(vm, methodName: nameof(WrenVM.GetSlotType), null, slotExpr),
                         Expression.Constant(WrenType.Null)),
-                    ifTrue: Expression.Constant(null),
+                    ifTrue: Expression.Constant(null, ifFalse.Type),
                     ifFalse: ifFalse
                     );
         }
@@ -38,7 +38,20 @@ namespace IronWren.FullyAutoMapper
         public static Expression SetSlotExpression(Type methodReturnType, ParameterExpression vm, Expression getterExpr)
         {
             Expression func;
-            if (methodReturnType == typeof(double)) //double
+            if (methodReturnType == typeof(void))
+            {
+                // Functions return null by default in wren, let's follow that convention
+                func = Expression.Block(
+                    getterExpr,
+                    Expression.Call(
+                        instance: vm,
+                        methodName: nameof(WrenVM.SetSlotNull),
+                        null,
+                        Expression.Constant(new int[] { 0 })
+                        )
+                    );
+            }
+            else if (methodReturnType == typeof(double)) //double
             {
                 func = Expression.Call(
                     instance: vm,
@@ -161,7 +174,7 @@ namespace IronWren.FullyAutoMapper
             else if (parameterType == typeof(string))
             {
                 return GetSlotNullable(vm, slotExpr,
-                    ifFalse: Expression.Call(vm, nameof(WrenVM.GetSlotDouble), null, slotExpr));
+                    ifFalse: Expression.Call(vm, nameof(WrenVM.GetSlotString), null, slotExpr));
             }
             else if (parameterType == typeof(byte[]))
             {
@@ -319,7 +332,7 @@ namespace IronWren.FullyAutoMapper
 
                 case WrenType.Null:
                     result = null;
-                    break;
+                    return result;
 
                 case WrenType.String:
                     if (type == typeof(string))
